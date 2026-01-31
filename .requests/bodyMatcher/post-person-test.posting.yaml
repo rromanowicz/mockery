@@ -1,0 +1,9 @@
+name: /person[Test]
+method: POST
+url: http://localhost:8080/person
+body:
+  content: "{\n\t\"firstName\": \"Test\"\n}"
+  content_type: application/json
+headers:
+- name: Content-Type
+  value: application/json

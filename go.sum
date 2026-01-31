@@ -1,0 +1,4 @@
+github.com/mattn/go-sqlite3 v1.14.33 h1:A5blZ5ulQo2AtayQ9/limgHEkFreKj1Dv226a1K73s0=
+github.com/mattn/go-sqlite3 v1.14.33/go.mod h1:Uh1q+B4BYcTPb+yiD3kU8Ct7aC0hY9fxUwlHK0RXw+Y=
+github.com/theory/jsonpath v0.10.2 h1:i8GeMxnD6ftNWeSeaGb/Eb8XghGjsas1eDizaQNupuE=
+github.com/theory/jsonpath v0.10.2/go.mod h1:ZOz+y6MxTEDcN/FOxf9AOgeHSoKHx2B+E0nD3HOtzGE=

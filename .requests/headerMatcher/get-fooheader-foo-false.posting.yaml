@@ -1,0 +1,5 @@
+name: /fooHeader -h foo=false
+url: http://localhost:8080/fooHeader
+headers:
+- name: foo
+  value: 'false'
