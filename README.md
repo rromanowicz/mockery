@@ -9,8 +9,16 @@ Features:
 - [x] Body matching
 - [ ] Path matching
 
+Persistence:
+
+- [x] SqLite
+- [ ] PostgreSql
+
 ## [ToC]
 
+- [Schema](#schema)
+  - [Class diagram](#class-diagram)
+  - [Validations](#validations)
 - [Config](#config)
   - [Endpoints](#endpoints)
 - [Examples](#examples)
@@ -19,6 +27,8 @@ Features:
   - [RequestQuery Matching](#requestquery-matching)
 
 ## Schema
+
+### Class diagram
 
 ```mermaid
 classDiagram
@@ -50,6 +60,17 @@ classDiagram
       +string value
   }
 ```
+
+### Validations
+
+- Mock.method
+  - Not empty
+  - Valid http method
+- Mock.path
+  - Not empty
+- Mock.responseStatus
+  - Not empty
+  - Valid http status
 
 ## Config
 
