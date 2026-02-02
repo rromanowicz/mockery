@@ -147,9 +147,10 @@ func filterMocks(mocks []service.Mock, req *http.Request) (service.Mock, error) 
 		log.Printf("Failed to read request body. %s", err.Error())
 	}
 
-	var matchedMocks []service.Mock
+	var matchedMocks []*service.Mock
 
-	for _, mock := range mocks {
+	for i := range mocks {
+		mock := &mocks[i]
 		if isMatchingRequestBody(mock.RequestBodyMatchers, requestBody) &&
 			isMatchingRequestQuery(mock.RequestQueryMatchers, req.URL.Query()) &&
 			isMatchingRequestHeader(mock.RequestHeaderMatchers, &req.Header) {
@@ -161,7 +162,7 @@ func filterMocks(mocks []service.Mock, req *http.Request) (service.Mock, error) 
 		return service.Mock{}, errors.New("not matched")
 	}
 
-	return matchedMocks[0], nil
+	return *matchedMocks[0], nil
 }
 
 func isMatchingRequestQuery(queryMatchers []service.QueryMatcher, requestQueryParams url.Values) bool {

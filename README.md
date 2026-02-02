@@ -4,10 +4,11 @@ Simple and lightweight mock server.
 
 Features:
 
+- [x] Path matching
 - [x] Query matching
 - [x] Header matching
 - [x] Body matching
-- [ ] Path matching
+- [ ] Regex matching (?)
 
 Persistence:
 
@@ -25,6 +26,7 @@ Persistence:
   - [Path Matching](#simple-path)
   - [RequestBody Matching](#requestbody-matching)
   - [RequestQuery Matching](#requestquery-matching)
+  - [RequestHeader Matching](#requestheader-matching)
 
 ## Schema
 
@@ -271,6 +273,45 @@ classDiagram
       "phoneNumbers": [
         { "number": "0123-4567-8888", "type": "iPhone" },
         { "number": "0123-4567-8910", "type": "home" }
+      ]
+    }
+    ```
+
+### RequestHeader Matching
+
+- POST /config
+  - ResponseStatus: 201
+  - RequestBody:
+
+    ```json
+    {
+      "method": "GET",
+      "path": "/fooHeader",
+      "requestHeaderMatchers": [
+        { "name": "foo", "value": "false" }
+      ],
+      "responseStatus": 418,
+      "responseBody": {
+        "foo": false,
+        "bar": [
+          {"baz": 3},
+          {"baz": 4}
+        ]
+      }
+    }
+    ```
+
+- GET /fooHeader
+  - RequestHeaders
+    - foo: false
+  - ResponseStatus: 418
+  - ResponseBody:
+    ```json
+    {
+      "foo": false,
+      "bar": [
+        {"baz": 3},
+        {"baz": 4}
       ]
     }
     ```
