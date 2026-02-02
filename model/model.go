@@ -1,4 +1,5 @@
-package service
+// Package model
+package model
 
 import (
 	"fmt"

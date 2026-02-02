@@ -1,30 +1,30 @@
-// Package  context
+// Package context
 package context
 
 import (
-	"database/sql"
-
 	"github.com/rromanowicz/mockery/db"
+	"github.com/rromanowicz/mockery/db/postgres"
+	"github.com/rromanowicz/mockery/db/sqlite"
 	"github.com/rromanowicz/mockery/service"
 )
 
 var (
-	dBConn      *sql.DB         = db.InitDB()
-	mockService service.MockInt = service.InitMockService(dBConn)
+	SqLite   = sqlite.SqLiteRepository{}
+	Postgres = postgres.PostgresRepository{}
 )
 
 type Context struct {
-	DBConn      *sql.DB
+	Repository  db.MockRepoInt
 	MockService service.MockInt
 }
 
-func InitContext() Context {
+func InitContext(repo db.MockRepoInt) Context {
 	return Context{
-		DBConn:      dBConn,
-		MockService: mockService,
+		Repository:  repo,
+		MockService: service.InitMockService(repo),
 	}
 }
 
 func (ctx Context) Close() {
-	ctx.DBConn.Close()
+	ctx.Repository.CloseDB()
 }

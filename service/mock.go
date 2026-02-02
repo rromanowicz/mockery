@@ -1,35 +1,38 @@
 // Package service
 package service
 
-import "database/sql"
+import (
+	"github.com/rromanowicz/mockery/db"
+	"github.com/rromanowicz/mockery/model"
+)
 
 type MockInt interface {
-	Get(method string, path string) ([]Mock, error)
-	Add(mock Mock) (Mock, error)
+	Get(method string, path string) ([]model.Mock, error)
+	Add(mock model.Mock) (model.Mock, error)
 	Delete(id int64) error
-	List() ([]Mock, error)
+	List() ([]model.Mock, error)
 }
 
 type MockService struct {
-	Repository MockRepoInt
+	Repository db.MockRepoInt
 }
 
-func InitMockService(DBConn *sql.DB) MockService {
-	return MockService{Repository: MockRepository{DBConn: DBConn}}
+func InitMockService(repo db.MockRepoInt) MockService {
+	return MockService{Repository: repo.InitDB()}
 }
 
-func (ms MockService) Get(method string, path string) ([]Mock, error) {
-	return ms.Repository.findByMethodAndPath(method, path)
+func (ms MockService) Get(method string, path string) ([]model.Mock, error) {
+	return ms.Repository.FindByMethodAndPath(method, path)
 }
 
-func (ms MockService) Add(mock Mock) (Mock, error) {
-	return ms.Repository.save(mock)
+func (ms MockService) Add(mock model.Mock) (model.Mock, error) {
+	return ms.Repository.Save(mock)
 }
 
 func (ms MockService) Delete(id int64) error {
-	return ms.Repository.deleteByID(id)
+	return ms.Repository.DeleteByID(id)
 }
 
-func (ms MockService) List() ([]Mock, error) {
-	return ms.Repository.getAll()
+func (ms MockService) List() ([]model.Mock, error) {
+	return ms.Repository.GetAll()
 }

@@ -15,7 +15,7 @@ import (
 	"strings"
 
 	"github.com/rromanowicz/mockery/context"
-	"github.com/rromanowicz/mockery/service"
+	"github.com/rromanowicz/mockery/model"
 
 	"github.com/theory/jsonpath"
 )
@@ -59,7 +59,7 @@ func handleConfig(ctx context.Context) func(rw http.ResponseWriter, req *http.Re
 				}
 			}
 		case "POST":
-			var requestMock service.Mock
+			var requestMock model.Mock
 			var err error
 			defer req.Body.Close()
 			err = json.NewDecoder(req.Body).Decode(&requestMock)
@@ -137,9 +137,9 @@ func handleAll(ctx context.Context) func(rw http.ResponseWriter, req *http.Reque
 	}
 }
 
-func filterMocks(mocks []service.Mock, req *http.Request) (service.Mock, error) {
+func filterMocks(mocks []model.Mock, req *http.Request) (model.Mock, error) {
 	if len(mocks) == 0 {
-		return service.Mock{}, errors.New("not found")
+		return model.Mock{}, errors.New("not found")
 	}
 
 	requestBody, err := io.ReadAll(req.Body)
@@ -147,7 +147,7 @@ func filterMocks(mocks []service.Mock, req *http.Request) (service.Mock, error) 
 		log.Printf("Failed to read request body. %s", err.Error())
 	}
 
-	var matchedMocks []*service.Mock
+	var matchedMocks []*model.Mock
 
 	for i := range mocks {
 		mock := &mocks[i]
@@ -159,13 +159,13 @@ func filterMocks(mocks []service.Mock, req *http.Request) (service.Mock, error) 
 	}
 
 	if len(matchedMocks) == 0 {
-		return service.Mock{}, errors.New("not matched")
+		return model.Mock{}, errors.New("not matched")
 	}
 
 	return *matchedMocks[0], nil
 }
 
-func isMatchingRequestQuery(queryMatchers []service.QueryMatcher, requestQueryParams url.Values) bool {
+func isMatchingRequestQuery(queryMatchers []model.QueryMatcher, requestQueryParams url.Values) bool {
 	if len(queryMatchers) == 0 {
 		return true
 	}
@@ -182,7 +182,7 @@ func isMatchingRequestQuery(queryMatchers []service.QueryMatcher, requestQueryPa
 	return true
 }
 
-func isMatchingRequestBody(bodyMatchers []service.BodyMatcher, requestBody []byte) bool {
+func isMatchingRequestBody(bodyMatchers []model.BodyMatcher, requestBody []byte) bool {
 	if len(bodyMatchers) == 0 {
 		return true
 	}
@@ -198,7 +198,7 @@ func isMatchingRequestBody(bodyMatchers []service.BodyMatcher, requestBody []byt
 	return true
 }
 
-func isMatchingRequestHeader(headerMatchers []service.HeaderMatcher, requestHeaders *http.Header) bool {
+func isMatchingRequestHeader(headerMatchers []model.HeaderMatcher, requestHeaders *http.Header) bool {
 	if len(headerMatchers) == 0 {
 		return true
 	}
@@ -215,7 +215,7 @@ func isMatchingRequestHeader(headerMatchers []service.HeaderMatcher, requestHead
 	return true
 }
 
-func isPathMatching(matcher service.BodyMatcher, string *[]byte) bool {
+func isPathMatching(matcher model.BodyMatcher, string *[]byte) bool {
 	var value any
 	if err := json.Unmarshal(*string, &value); err != nil {
 		log.Printf("Failed to marshal request body. %s", err.Error())
