@@ -28,6 +28,17 @@ Persistence:
   - [RequestQuery Matching](#requestquery-matching)
   - [RequestHeader Matching](#requestheader-matching)
 
+## Running
+
+```sh
+./mockery --port=8080 --db=SqLite
+```
+
+Skip flags to use default values
+
+- Port: 8080
+- Db: SqLite
+
 ## Schema
 
 ### Class diagram
@@ -79,6 +90,7 @@ classDiagram
 ### Endpoints
 
 - POST /config
+
   - ResponseStatus: 201
   - RequestBody:
 
@@ -92,6 +104,7 @@ classDiagram
     ```
 
 - GET /config?method=GET&path=/foo/bar
+
   - ResponseStatus: 200
   - ResponseBody:
 
@@ -105,6 +118,7 @@ classDiagram
     ```
 
 - GET /config/list
+
   - ResponseBody:
 
     ```json
@@ -148,6 +162,7 @@ classDiagram
 ### Simple path
 
 - POST /config
+
   - ResponseStatus: 201
   - RequestBody:
 
@@ -161,6 +176,7 @@ classDiagram
     ```
 
 - GET /foo/bar
+
   - ResponseStatus: 418
   - ResponseBody:
 
@@ -174,6 +190,7 @@ classDiagram
 ### RequestBody Matching
 
 - POST /config
+
   - ResponseStatus: 201
   - RequestBody:
 
@@ -201,6 +218,7 @@ classDiagram
     ```
 
 - POST /person
+
   - RequestBody:
 
     ```json
@@ -231,6 +249,7 @@ classDiagram
 ### RequestQuery Matching
 
 - POST /config
+
   - ResponseStatus: 201
   - RequestBody:
 
@@ -280,6 +299,7 @@ classDiagram
 ### RequestHeader Matching
 
 - POST /config
+
   - ResponseStatus: 201
   - RequestBody:
 
@@ -287,16 +307,11 @@ classDiagram
     {
       "method": "GET",
       "path": "/fooHeader",
-      "requestHeaderMatchers": [
-        { "name": "foo", "value": "false" }
-      ],
+      "requestHeaderMatchers": [{ "name": "foo", "value": "false" }],
       "responseStatus": 418,
       "responseBody": {
         "foo": false,
-        "bar": [
-          {"baz": 3},
-          {"baz": 4}
-        ]
+        "bar": [{ "baz": 3 }, { "baz": 4 }]
       }
     }
     ```
@@ -309,9 +324,6 @@ classDiagram
     ```json
     {
       "foo": false,
-      "bar": [
-        {"baz": 3},
-        {"baz": 4}
-      ]
+      "bar": [{ "baz": 3 }, { "baz": 4 }]
     }
     ```

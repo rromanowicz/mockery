@@ -16,7 +16,7 @@ type SqLiteRepository struct {
 }
 
 func (mr SqLiteRepository) InitDB() db.MockRepoInt {
-	log.Println("Starting DB")
+	log.Println("Initializing SqLite repository.")
 
 	DB, err := sql.Open("sqlite3", "./app.db")
 	if err != nil {

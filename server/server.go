@@ -20,11 +20,10 @@ const (
 
 var ctx context.Context
 
-func StartMockServer(dbType Database) error {
-	log.Println("Starting Service")
-
+func StartMockServer(port *int, dbType *string) error {
 	var repo db.MockRepoInt
-	switch dbType {
+
+	switch Database(*dbType) {
 	case SqLite:
 		repo = context.SqLite
 	case Postgres:
@@ -33,6 +32,8 @@ func StartMockServer(dbType Database) error {
 		return fmt.Errorf("unsupported DB Type")
 	}
 
+	log.Printf("Starting server [Port: %v, DB: %v]", *port, *dbType)
+
 	ctx = context.InitContext(repo)
 	defer ctx.Close()
 
@@ -40,7 +41,7 @@ func StartMockServer(dbType Database) error {
 	routing.RegisterRoutes(ctx, handler)
 
 	server := http.Server{
-		Addr:    ":8080",
+		Addr:    fmt.Sprintf(":%v", *port),
 		Handler: handler,
 	}
 
