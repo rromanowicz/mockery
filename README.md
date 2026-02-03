@@ -8,12 +8,16 @@ Features:
 - [x] Query matching
 - [x] Header matching
 - [x] Body matching
+- [ ] Path variable matching
 - [ ] Regex matching (?)
+- [x] JSON File export
+- [x] JSON File import
 
 Persistence:
 
 - [x] SqLite
-- [ ] PostgreSql
+- [ ] PostgreSQL
+- [ ] JSON Files
 
 ## [ToC]
 

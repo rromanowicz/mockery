@@ -11,6 +11,8 @@ type MockInt interface {
 	Add(mock model.Mock) (model.Mock, error)
 	Delete(id int64) error
 	List() ([]model.Mock, error)
+	Import() ([]string, error)
+	Export() ([]string, error)
 }
 
 type MockService struct {
@@ -35,4 +37,12 @@ func (ms MockService) Delete(id int64) error {
 
 func (ms MockService) List() ([]model.Mock, error) {
 	return ms.Repository.GetAll()
+}
+
+func (ms MockService) Import() ([]string, error) {
+	return ms.Repository.Import()
+}
+
+func (ms MockService) Export() ([]string, error) {
+	return ms.Repository.Export()
 }

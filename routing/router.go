@@ -23,10 +23,14 @@ import (
 func RegisterRoutes(ctx context.Context, handler *RegexpHandler) {
 	regHelp, _ := regexp.Compile("/help")
 	regConfigList, _ := regexp.Compile("/config/list")
+	regConfigImport, _ := regexp.Compile("/config/import")
+	regConfigExport, _ := regexp.Compile("/config/export")
 	regConfig, _ := regexp.Compile("/config.*")
 	reg, _ := regexp.Compile("/.*")
 	handler.HandleFunc(regHelp, handleHelp)
 	handler.HandleFunc(regConfigList, handleConfigList(ctx))
+	handler.HandleFunc(regConfigImport, handleConfigImport(ctx))
+	handler.HandleFunc(regConfigExport, handleConfigExport(ctx))
 	handler.HandleFunc(regConfig, handleConfig(ctx))
 	handler.HandleFunc(reg, handleAll(ctx))
 }
@@ -111,6 +115,36 @@ func handleConfigList(ctx context.Context) func(rw http.ResponseWriter, req *htt
 			rw.WriteHeader(http.StatusOK)
 			response, _ := json.Marshal(mocks)
 			rw.Write(response)
+		}
+	}
+}
+
+func handleConfigImport(ctx context.Context) func(rw http.ResponseWriter, req *http.Request) {
+	return func(rw http.ResponseWriter, req *http.Request) {
+		files, err := ctx.MockService.Import()
+		if err != nil {
+			rw.WriteHeader(http.StatusInternalServerError)
+			rw.Write([]byte(err.Error()))
+		} else {
+			rw.Header().Set("Content-Type", "application/json")
+			rw.WriteHeader(http.StatusOK)
+			resp, _ := json.Marshal(files)
+			rw.Write(resp)
+		}
+	}
+}
+
+func handleConfigExport(ctx context.Context) func(rw http.ResponseWriter, req *http.Request) {
+	return func(rw http.ResponseWriter, req *http.Request) {
+		files, err := ctx.MockService.Export()
+		if err != nil {
+			rw.WriteHeader(http.StatusInternalServerError)
+			rw.Write([]byte(err.Error()))
+		} else {
+			rw.Header().Set("Content-Type", "application/json")
+			rw.WriteHeader(http.StatusOK)
+			resp, _ := json.Marshal(files)
+			rw.Write(resp)
 		}
 	}
 }

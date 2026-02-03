@@ -13,9 +13,9 @@ type Mock struct {
 	ID                    int64           `json:"id"`
 	Method                string          `json:"method" validate:"notEmpty,httpMethod"`
 	Path                  string          `json:"path" validate:"notEmpty"`
-	RequestHeaderMatchers []HeaderMatcher `json:"requestHeaderMatchers"`
-	RequestQueryMatchers  []QueryMatcher  `json:"requestQueryMatchers"`
-	RequestBodyMatchers   []BodyMatcher   `json:"requestBodyMatchers"`
+	RequestHeaderMatchers []HeaderMatcher `json:"requestHeaderMatchers,omitempty"`
+	RequestQueryMatchers  []QueryMatcher  `json:"requestQueryMatchers,omitempty"`
+	RequestBodyMatchers   []BodyMatcher   `json:"requestBodyMatchers,omitempty"`
 	ResponseStatus        int             `json:"responseStatus" validate:"httpStatus"`
 	ResponseBody          any             `json:"responseBody"`
 }

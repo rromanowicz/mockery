@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log"
+	"strings"
+	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rromanowicz/mockery/db"
@@ -13,12 +15,13 @@ import (
 
 type SqLiteRepository struct {
 	DBConn *sql.DB
+	lock   *sync.RWMutex
 }
 
 func (mr SqLiteRepository) InitDB() db.MockRepoInt {
 	log.Println("Initializing SqLite repository.")
 
-	DB, err := sql.Open("sqlite3", "./app.db")
+	DB, err := sql.Open("sqlite3", "file:app.db?cache=shared&mode=rwc&_journal_mode=WAL")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -39,6 +42,7 @@ func (mr SqLiteRepository) InitDB() db.MockRepoInt {
 		log.Fatalf("Error creating table: %q: %s\n", err, sqlStmt)
 	}
 	mr.DBConn = DB
+	mr.lock = &sync.RWMutex{}
 	return mr
 }
 
@@ -81,11 +85,15 @@ func (mr SqLiteRepository) FindByID(id int64) (model.Mock, error) {
 }
 
 func (mr SqLiteRepository) DeleteByID(id int64) error {
+	defer mr.lock.Unlock()
+	mr.lock.Lock()
 	_, err := mr.DBConn.Exec("delete from mock where id=?", id)
 	return err
 }
 
 func (mr SqLiteRepository) Save(mock model.Mock) (model.Mock, error) {
+	defer mr.lock.Unlock()
+	mr.lock.Lock()
 	responseBodyJs, _ := json.Marshal(mock.ResponseBody)
 	bodyMatchersJs, _ := json.Marshal(mock.RequestBodyMatchers)
 	queryMatchersJs, _ := json.Marshal(mock.RequestQueryMatchers)
@@ -106,6 +114,36 @@ func (mr SqLiteRepository) Save(mock model.Mock) (model.Mock, error) {
 	return mr.FindByID(id)
 }
 
+func (mr SqLiteRepository) Import() ([]string, error) {
+	mocks, files, err := db.ImportMocks()
+	if err != nil {
+		log.Println("Failed to read mocks.")
+		return []string{}, err
+	}
+	for i := range mocks {
+		_, err = mr.Save(mocks[i])
+		if err != nil {
+			log.Println("Failed to save mock.")
+			return []string{}, err
+		}
+	}
+	return files, nil
+}
+
+func (mr SqLiteRepository) Export() ([]string, error) {
+	mocks, err := mr.GetAll()
+	if err != nil {
+		log.Println("Failed to fetch mocks.")
+		return []string{}, err
+	}
+	files, err := db.ExportMocks(mocks)
+	if err != nil {
+		log.Println("Failed to save mock.")
+		return []string{}, err
+	}
+	return files, nil
+}
+
 func parseResult(rows *sql.Rows) []model.Mock {
 	mocks := []model.Mock{}
 	for rows.Next() {
@@ -113,7 +151,8 @@ func parseResult(rows *sql.Rows) []model.Mock {
 		var bodyMatchers string
 		var queryMatchers string
 		var headerMatchers string
-		err := rows.Scan(&mock.ID, &mock.Method, &mock.Path, &headerMatchers, &queryMatchers, &bodyMatchers, &mock.ResponseStatus, &mock.ResponseBody)
+		var response string
+		err := rows.Scan(&mock.ID, &mock.Method, &mock.Path, &headerMatchers, &queryMatchers, &bodyMatchers, &mock.ResponseStatus, &response)
 		if err != nil {
 			log.Println(err.Error())
 		}
@@ -128,6 +167,10 @@ func parseResult(rows *sql.Rows) []model.Mock {
 		var parsedHeaderMatchers []model.HeaderMatcher
 		json.Unmarshal([]byte(headerMatchers), &parsedHeaderMatchers)
 		mock.RequestHeaderMatchers = parsedHeaderMatchers
+
+		var parsedResponse any
+		json.Unmarshal([]byte(strings.ReplaceAll(response, "\\\"", "\"")), &parsedResponse)
+		mock.ResponseBody = parsedResponse
 
 		mocks = append(mocks, mock)
 	}
