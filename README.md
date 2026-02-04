@@ -56,6 +56,7 @@ classDiagram
       +int64 id
       +string method
       +string path
+      +string regexPath
       +[]HeaderMatcher requestHeaderMatchers
       +[]QueryMatcher requestQueryMatchers
       +[]BodyMatcher requestBodyMatchers
@@ -82,11 +83,13 @@ classDiagram
 - Mock.method
   - Not empty
   - Valid http method
-- Mock.path
+- Mock.path xor Mock.regexPath
   - Not empty
 - Mock.responseStatus
   - Not empty
   - Valid http status
+- HeaderMatcher | QueryMatcher | BodyMatcher
+  - Both fields required if present
 
 ## Config
 
@@ -159,6 +162,16 @@ classDiagram
 
 - DELETE /config?id=1
   - ResponseStatus: 200
+
+- GET /config/import
+  - ResponseStatus: 200
+  - ResponseBody : []string
+    - List of imported files
+
+- GET /config/export
+  - ResponseStatus: 200
+  - ResponseBody : []string
+    - List of exported files
 
 ## Examples
 
