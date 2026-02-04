@@ -8,8 +8,7 @@ Features:
 - [x] Query matching
 - [x] Header matching
 - [x] Body matching
-- [ ] Path variable matching
-- [ ] Regex matching (?)
+- [x] Regex matching
 - [x] JSON File export
 - [x] JSON File import
 
@@ -17,7 +16,6 @@ Persistence:
 
 - [x] SqLite
 - [ ] PostgreSQL
-- [ ] JSON Files
 
 ## [ToC]
 
@@ -31,6 +29,7 @@ Persistence:
   - [RequestBody Matching](#requestbody-matching)
   - [RequestQuery Matching](#requestquery-matching)
   - [RequestHeader Matching](#requestheader-matching)
+  - [Regexp Matching](#regexp-matching)
 
 ## Running
 
@@ -329,5 +328,45 @@ classDiagram
     {
       "foo": false,
       "bar": [{ "baz": 3 }, { "baz": 4 }]
+    }
+    ```
+
+
+### Regexp Matching
+
+- POST /config
+
+  - ResponseStatus: 201
+  - RequestBody:
+
+    ```json
+    {
+      "method": "GET",
+      "regexPath": "\/foo\/bar\/\\d+\/baz",
+      "responseStatus": 200,
+      "responseBody": {
+        "foo": true,
+        "bar": {
+          "id": 123,
+          "baz": {
+            "zxc": 18
+          }
+        }
+      }
+    }
+    ```
+
+- GET /foo/bar/123/baz
+  - ResponseStatus: 200
+  - ResponseBody:
+    ```json
+    {
+      "foo": true,
+      "bar": {
+        "id": 123,
+        "baz": {
+          "zxc": 18
+        }
+      }
     }
     ```
