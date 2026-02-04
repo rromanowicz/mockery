@@ -8,11 +8,13 @@ import (
 
 type MockInt interface {
 	Get(method string, path string) ([]model.Mock, error)
+	GetByIds(ids []int64) ([]model.Mock, error)
 	Add(mock model.Mock) (model.Mock, error)
 	Delete(id int64) error
 	List() ([]model.Mock, error)
 	Import() ([]string, error)
 	Export() ([]string, error)
+	GetRegexpMatchers(method string) ([]model.RegexMatcher, error)
 }
 
 type MockService struct {
@@ -25,6 +27,10 @@ func InitMockService(repo db.MockRepoInt) MockService {
 
 func (ms MockService) Get(method string, path string) ([]model.Mock, error) {
 	return ms.Repository.FindByMethodAndPath(method, path)
+}
+
+func (ms MockService) GetByIds(ids []int64) ([]model.Mock, error) {
+	return ms.Repository.FindByIDs(ids)
 }
 
 func (ms MockService) Add(mock model.Mock) (model.Mock, error) {
@@ -45,4 +51,8 @@ func (ms MockService) Import() ([]string, error) {
 
 func (ms MockService) Export() ([]string, error) {
 	return ms.Repository.Export()
+}
+
+func (ms MockService) GetRegexpMatchers(method string) ([]model.RegexMatcher, error) {
+	return ms.Repository.GetRegexpMatchers(method)
 }

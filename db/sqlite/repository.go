@@ -4,7 +4,9 @@ package sqlite
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -30,6 +32,7 @@ func (mr SqLiteRepository) InitDB() db.MockRepoInt {
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   method TEXT,
   path TEXT,
+  regex_path TEXT,
 	request_header_matchers TEXT,
 	request_query_matchers TEXT,
 	request_body_matchers TEXT,
@@ -51,7 +54,7 @@ func (mr SqLiteRepository) CloseDB() {
 }
 
 func (mr SqLiteRepository) FindByMethodAndPath(method string, path string) ([]model.Mock, error) {
-	rows, err := mr.DBConn.Query("select * from mock where method=? and path=?", method, path)
+	rows, err := mr.DBConn.Query("select * from mock where method=? and path is not null and path=?", method, path)
 	if err != nil {
 		log.Println(err.Error())
 		return []model.Mock{}, err
@@ -84,6 +87,21 @@ func (mr SqLiteRepository) FindByID(id int64) (model.Mock, error) {
 	return result[0], nil
 }
 
+func (mr SqLiteRepository) FindByIDs(ids []int64) ([]model.Mock, error) {
+	idString := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(ids)), ","), "[]")
+	rows, err := mr.DBConn.Query("select * from mock where id in (?)", idString)
+	if err != nil {
+		log.Println(err.Error())
+		return []model.Mock{}, err
+	}
+	results := parseResult(rows)
+	if len(results) == 0 {
+		log.Printf("Mock [id in (%v)] not found.", ids)
+		return []model.Mock{}, nil
+	}
+	return results, nil
+}
+
 func (mr SqLiteRepository) DeleteByID(id int64) error {
 	defer mr.lock.Unlock()
 	mr.lock.Lock()
@@ -99,9 +117,9 @@ func (mr SqLiteRepository) Save(mock model.Mock) (model.Mock, error) {
 	queryMatchersJs, _ := json.Marshal(mock.RequestQueryMatchers)
 	headerMatchersJs, _ := json.Marshal(mock.RequestHeaderMatchers)
 	result, err := mr.DBConn.Exec(
-		`insert into mock(method, path, request_header_matchers, request_query_matchers, request_body_matchers, response_status, response_body)
-		values (?, ?, ?, ?, ?, ?, ?)`,
-		mock.Method, mock.Path, string(headerMatchersJs), string(queryMatchersJs), string(bodyMatchersJs), mock.ResponseStatus, string(responseBodyJs))
+		`insert into mock(method, path, regex_path, request_header_matchers, request_query_matchers, request_body_matchers, response_status, response_body)
+		values (?, ?, ?, ?, ?, ?, ?, ?)`,
+		mock.Method, mock.Path, mock.RegexPath, string(headerMatchersJs), string(queryMatchersJs), string(bodyMatchersJs), mock.ResponseStatus, string(responseBodyJs))
 	if err != nil {
 		log.Printf("Failed to save. %s", err.Error())
 		return model.Mock{}, err
@@ -144,6 +162,32 @@ func (mr SqLiteRepository) Export() ([]string, error) {
 	return files, nil
 }
 
+func (mr SqLiteRepository) GetRegexpMatchers(method string) ([]model.RegexMatcher, error) {
+	rows, err := mr.DBConn.Query("select id, method, regex_path from mock where method=? and regex_path is not null and regex_path != ''", method)
+	if err != nil {
+		log.Println(err.Error())
+		return []model.RegexMatcher{}, err
+	}
+	defer rows.Close()
+	matchers := []model.RegexMatcher{}
+	for rows.Next() {
+		var matcher model.RegexMatcher
+		var regex string
+		err := rows.Scan(&matcher.ID, &matcher.Method, &regex)
+		if err != nil {
+			log.Println(err.Error())
+		}
+		compiledRegexp, err := regexp.Compile(regex)
+		if err != nil {
+			log.Println(err.Error())
+			continue
+		}
+		matcher.Regexp = compiledRegexp
+		matchers = append(matchers, matcher)
+	}
+	return matchers, nil
+}
+
 func parseResult(rows *sql.Rows) []model.Mock {
 	mocks := []model.Mock{}
 	for rows.Next() {
@@ -152,7 +196,7 @@ func parseResult(rows *sql.Rows) []model.Mock {
 		var queryMatchers string
 		var headerMatchers string
 		var response string
-		err := rows.Scan(&mock.ID, &mock.Method, &mock.Path, &headerMatchers, &queryMatchers, &bodyMatchers, &mock.ResponseStatus, &response)
+		err := rows.Scan(&mock.ID, &mock.Method, &mock.Path, &mock.RegexPath, &headerMatchers, &queryMatchers, &bodyMatchers, &mock.ResponseStatus, &response)
 		if err != nil {
 			log.Println(err.Error())
 		}

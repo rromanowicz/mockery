@@ -12,7 +12,6 @@ import (
 	"os"
 	"regexp"
 	"strconv"
-	"strings"
 
 	"github.com/rromanowicz/mockery/context"
 	"github.com/rromanowicz/mockery/model"
@@ -151,24 +150,55 @@ func handleConfigExport(ctx context.Context) func(rw http.ResponseWriter, req *h
 
 func handleAll(ctx context.Context) func(rw http.ResponseWriter, req *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
-		mocks, err := ctx.MockService.Get(req.Method, req.URL.Path)
+		mocks, err := fetchMocks(ctx, req.Method, req.URL.Path)
+		if err != nil {
+			rw.WriteHeader(http.StatusNotFound)
+			rw.Write([]byte(err.Error()))
+			return
+		}
+		mock, err := filterMocks(mocks, req)
 		if err != nil {
 			rw.WriteHeader(http.StatusNotFound)
 			rw.Write([]byte(err.Error()))
 		} else {
-			mock, err := filterMocks(mocks, req)
-			if err != nil {
-				rw.WriteHeader(http.StatusNotFound)
-				rw.Write([]byte(err.Error()))
-			} else {
-				log.Printf("Matched Mock[id=%v]", mock.ID)
-				rw.Header().Set("Content-Type", "application/json")
-				rw.WriteHeader(mock.ResponseStatus)
-				response := strings.ReplaceAll(mock.ResponseBody.(string), "\\", "")
-				rw.Write([]byte(response))
-			}
+			log.Printf("Matched Mock[id=%v]", mock.ID)
+			rw.Header().Set("Content-Type", "application/json")
+			rw.WriteHeader(mock.ResponseStatus)
+			response, _ := json.Marshal(mock.ResponseBody)
+			rw.Write(response)
 		}
 	}
+}
+
+func fetchMocks(ctx context.Context, method string, path string) ([]model.Mock, error) {
+	var mocks []model.Mock
+	var err error
+	mocks, err = ctx.MockService.Get(method, path)
+	if err != nil {
+		return []model.Mock{}, err
+	}
+
+	if len(mocks) == 0 {
+		regexMatchers, err := ctx.MockService.GetRegexpMatchers(method)
+		if err != nil {
+			return []model.Mock{}, err
+		}
+		var ids []int64
+		for i := range regexMatchers {
+			if regexMatchers[i].Regexp.MatchString(path) {
+				ids = append(ids, regexMatchers[i].ID)
+			}
+		}
+		if len(ids) == 0 {
+			return []model.Mock{}, fmt.Errorf("no mocks found")
+		}
+		mocks, err = ctx.MockService.GetByIds(ids)
+		if err != nil {
+			return []model.Mock{}, err
+		}
+	}
+
+	return mocks, nil
 }
 
 func filterMocks(mocks []model.Mock, req *http.Request) (model.Mock, error) {

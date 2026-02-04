@@ -20,11 +20,13 @@ type MockRepoInt interface {
 	CloseDB()
 	FindByMethodAndPath(method string, path string) ([]model.Mock, error)
 	FindByID(id int64) (model.Mock, error)
+	FindByIDs(ids []int64) ([]model.Mock, error)
 	DeleteByID(id int64) error
 	Save(mock model.Mock) (model.Mock, error)
 	GetAll() ([]model.Mock, error)
 	Import() ([]string, error)
 	Export() ([]string, error)
+	GetRegexpMatchers(method string) ([]model.RegexMatcher, error)
 }
 
 func ExportMocks(mocks []model.Mock) ([]string, error) {
@@ -36,7 +38,13 @@ func ExportMocks(mocks []model.Mock) ([]string, error) {
 			log.Printf("Failed to marshall mock [id=%v]. Error: %v", mocks[i].ID, err.Error())
 			continue
 		}
-		fileName := fmt.Sprintf("%s/%v_%s%s.json", dir, mocks[i].ID, mocks[i].Method, strings.ReplaceAll(mocks[i].Path, "/", "_"))
+		var urlPath string
+		if len(mocks[i].Path) != 0 {
+			urlPath = strings.ReplaceAll(mocks[i].Path, "/", "_")
+		} else {
+			urlPath = strings.ReplaceAll(strings.ReplaceAll(mocks[i].RegexPath, "/", "_"), "\\", "")
+		}
+		fileName := fmt.Sprintf("%s/%v_%s%s.json", dir, mocks[i].ID, mocks[i].Method, urlPath)
 		err = writeFile(fileName, mockData)
 		if err != nil {
 			log.Printf("Failed to write mock [%s]. Error: %v", fileName, err.Error())

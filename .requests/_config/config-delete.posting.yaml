@@ -1,0 +1,6 @@
+name: /config
+method: DELETE
+url: http://localhost:8080/config
+params:
+- name: id
+  value: '8'

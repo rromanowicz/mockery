@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"regexp"
 	"slices"
 	"strings"
 )
@@ -12,7 +13,8 @@ import (
 type Mock struct {
 	ID                    int64           `json:"id"`
 	Method                string          `json:"method" validate:"notEmpty,httpMethod"`
-	Path                  string          `json:"path" validate:"notEmpty"`
+	Path                  string          `json:"path,omitempty"`
+	RegexPath             string          `json:"regexPath,omitempty"`
 	RequestHeaderMatchers []HeaderMatcher `json:"requestHeaderMatchers,omitempty"`
 	RequestQueryMatchers  []QueryMatcher  `json:"requestQueryMatchers,omitempty"`
 	RequestBodyMatchers   []BodyMatcher   `json:"requestBodyMatchers,omitempty"`
@@ -33,6 +35,12 @@ type BodyMatcher struct {
 type HeaderMatcher struct {
 	HeaderName    string `json:"name"`
 	ExpectedValue string `json:"value"`
+}
+
+type RegexMatcher struct {
+	ID     int64
+	Method string
+	Regexp *regexp.Regexp
 }
 
 func (m Mock) Validate() []string {
@@ -59,5 +67,55 @@ func (m Mock) Validate() []string {
 			}
 		}
 	}
+	validateMissingData(m, &validationErrors)
 	return validationErrors
+}
+
+func validateMissingData(mock Mock, validationErrors *[]string) {
+	validatePath(mock, validationErrors)
+	validateHeaderMatchers(mock, validationErrors)
+	validateQueryMatchers(mock, validationErrors)
+	validateBodyMatchers(mock, validationErrors)
+}
+
+func validateBodyMatchers(mock Mock, validationErrors *[]string) {
+	for i := range mock.RequestBodyMatchers {
+		matcher := mock.RequestBodyMatchers[i]
+		if len(matcher.JSONPathString) == 0 && len(fmt.Sprint(matcher.ExpectedValue)) == 0 {
+			*validationErrors = append(*validationErrors, "Invalid BodyMatcher. Both values must be provided.")
+			break
+		}
+	}
+}
+
+func validateQueryMatchers(mock Mock, validationErrors *[]string) {
+	for i := range mock.RequestQueryMatchers {
+		matcher := mock.RequestQueryMatchers[i]
+		if len(matcher.ParamName) == 0 && len(fmt.Sprint(matcher.ExpectedValue)) == 0 {
+			*validationErrors = append(*validationErrors, "Invalid QueryMatcher. Both values must be provided.")
+			break
+		}
+	}
+}
+
+func validateHeaderMatchers(mock Mock, validationErrors *[]string) {
+	for i := range mock.RequestHeaderMatchers {
+		matcher := mock.RequestHeaderMatchers[i]
+		if len(matcher.HeaderName) == 0 && len(fmt.Sprint(matcher.ExpectedValue)) == 0 {
+			*validationErrors = append(*validationErrors, "Invalid HeaderMatcher. Both values must be provided.")
+			break
+		}
+	}
+}
+
+func validatePath(mock Mock, validationErrors *[]string) {
+	if len(mock.Path) == 0 && len(mock.RegexPath) == 0 {
+		*validationErrors = append(*validationErrors, "Invalid path. Either 'Path' or 'RegexPath' must be provided.")
+	}
+	if len(mock.RegexPath) != 0 {
+		_, err := regexp.Compile(mock.RegexPath)
+		if err != nil {
+			*validationErrors = append(*validationErrors, fmt.Sprintf("Invalid RegexPath. %s is not a valid expression.", mock.RegexPath))
+		}
+	}
 }

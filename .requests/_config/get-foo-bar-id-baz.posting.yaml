@@ -1,0 +1,12 @@
+name: GET /foo/bar/{id}/baz
+method: POST
+url: http://localhost:8080/config
+body:
+  content: "{\n\t\"method\": \"GET\",\n\t\"regexPath\": \"\\/foo\\/bar\\/\\\\d+\\\
+    /baz\",\n\t\"responseStatus\": 200,\n\t\"responseBody\": {\n\t\t\"foo\": true,\n\
+    \t\t\"bar\": {\n\t\t\t\"id\": 123,\n\t\t\t\"baz\": {\n\t\t\t\t\"zxc\": 18\n\t\t\
+    \t}\n\t\t}\n\t}\n}"
+  content_type: application/json
+headers:
+- name: content-type
+  value: application/json

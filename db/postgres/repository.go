@@ -33,6 +33,10 @@ func (mr PostgresRepository) FindByID(id int64) (model.Mock, error) {
 	return model.Mock{}, nil
 }
 
+func (mr PostgresRepository) FindByIDs(id []int64) ([]model.Mock, error) {
+	return []model.Mock{}, nil
+}
+
 func (mr PostgresRepository) DeleteByID(id int64) error {
 	return nil
 }
@@ -47,4 +51,8 @@ func (mr PostgresRepository) Import() ([]string, error) {
 
 func (mr PostgresRepository) Export() ([]string, error) {
 	return []string{}, nil
+}
+
+func (mr PostgresRepository) GetRegexpMatchers(method string) ([]model.RegexMatcher, error) {
+	return []model.RegexMatcher{}, nil
 }
