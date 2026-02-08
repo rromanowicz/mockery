@@ -58,7 +58,8 @@ func handleConfig(ctx context.Context) func(rw http.ResponseWriter, req *http.Re
 					rw.Write([]byte(err.Error()))
 				} else {
 					rw.WriteHeader(mock.ResponseStatus)
-					rw.Write([]byte(mock.ResponseBody.(string)))
+					resp, _ := mock.ResponseBody.Value()
+					rw.Write(resp.([]byte))
 				}
 			}
 		case "POST":
@@ -185,7 +186,8 @@ func fetchMocks(ctx context.Context, method string, path string) ([]model.Mock, 
 		}
 		var ids []int64
 		for i := range regexMatchers {
-			if regexMatchers[i].Regexp.MatchString(path) {
+			if regexMatchers[i].RegexPath.Compile().MatchString(path) {
+				log.Println(regexMatchers[i])
 				ids = append(ids, regexMatchers[i].ID)
 			}
 		}
@@ -229,7 +231,7 @@ func filterMocks(mocks []model.Mock, req *http.Request) (model.Mock, error) {
 	return *matchedMocks[0], nil
 }
 
-func isMatchingRequestQuery(queryMatchers []model.QueryMatcher, requestQueryParams url.Values) bool {
+func isMatchingRequestQuery(queryMatchers model.Matchers, requestQueryParams url.Values) bool {
 	if len(queryMatchers) == 0 {
 		return true
 	}
@@ -238,15 +240,15 @@ func isMatchingRequestQuery(queryMatchers []model.QueryMatcher, requestQueryPara
 	}
 
 	for _, matcher := range queryMatchers {
-		input := requestQueryParams.Get(matcher.ParamName)
-		if len(input) == 0 || fmt.Sprintf("%v", matcher.ExpectedValue) != input {
+		input := requestQueryParams.Get(matcher.Key)
+		if len(input) == 0 || fmt.Sprintf("%v", matcher.Value) != input {
 			return false
 		}
 	}
 	return true
 }
 
-func isMatchingRequestBody(bodyMatchers []model.BodyMatcher, requestBody []byte) bool {
+func isMatchingRequestBody(bodyMatchers model.Matchers, requestBody []byte) bool {
 	if len(bodyMatchers) == 0 {
 		return true
 	}
@@ -262,7 +264,7 @@ func isMatchingRequestBody(bodyMatchers []model.BodyMatcher, requestBody []byte)
 	return true
 }
 
-func isMatchingRequestHeader(headerMatchers []model.HeaderMatcher, requestHeaders *http.Header) bool {
+func isMatchingRequestHeader(headerMatchers model.Matchers, requestHeaders *http.Header) bool {
 	if len(headerMatchers) == 0 {
 		return true
 	}
@@ -271,27 +273,27 @@ func isMatchingRequestHeader(headerMatchers []model.HeaderMatcher, requestHeader
 	}
 
 	for _, matcher := range headerMatchers {
-		headervalue := requestHeaders.Get(matcher.HeaderName)
-		if len(headervalue) == 0 || matcher.ExpectedValue != headervalue {
+		headervalue := requestHeaders.Get(matcher.Key)
+		if len(headervalue) == 0 || matcher.Value != headervalue {
 			return false
 		}
 	}
 	return true
 }
 
-func isPathMatching(matcher model.BodyMatcher, string *[]byte) bool {
+func isPathMatching(matcher model.Matcher, string *[]byte) bool {
 	var value any
 	if err := json.Unmarshal(*string, &value); err != nil {
 		log.Printf("Failed to marshal request body. %s", err.Error())
 	}
-	path, err := jsonpath.Parse(matcher.JSONPathString)
+	path, err := jsonpath.Parse(matcher.Key)
 	if err != nil {
 		log.Printf("Failed to parse JsonPath. %s", err.Error())
 	}
 
 	nodes := path.Select(value)
 	for _, node := range nodes {
-		if matcher.ExpectedValue == fmt.Sprintf("%v", node) {
+		if matcher.Value == fmt.Sprintf("%v", node) {
 			return true
 		}
 	}

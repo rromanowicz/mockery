@@ -3,7 +3,7 @@ method: POST
 url: http://localhost:8080/config
 body:
   content: "{\n\t\"method\": \"GET\",\n\t\"path\": \"/fooHeader\",\n\t\"requestHeaderMatchers\"\
-    : [\n\t\t{\n\t\t\t\"name\": \"foo\",\n\t\t\t\"value\": \"false\"\n\t\t}\n\t],\n\
+    : [\n\t\t{\n\t\t\t\"key\": \"foo\",\n\t\t\t\"value\": \"false\"\n\t\t}\n\t],\n\
     \t\"responseStatus\": 418,\n\t\"responseBody\": {\n\t\t\"foo\": false,\n\t\t\"\
     bar\": [\n\t\t\t{\"baz\": 3},\n\t\t\t{\"baz\": 4}\n\t\t]\n\t}\n}"
   content_type: application/json

@@ -5,12 +5,14 @@ import (
 	"github.com/rromanowicz/mockery/db"
 	"github.com/rromanowicz/mockery/db/postgres"
 	"github.com/rromanowicz/mockery/db/sqlite"
+	"github.com/rromanowicz/mockery/db/sqliteorm"
 	"github.com/rromanowicz/mockery/service"
 )
 
 var (
-	SqLite   = sqlite.SqLiteRepository{}
-	Postgres = postgres.PostgresRepository{}
+	SqLite    = sqlite.SqLiteRepository{}
+	SqLiteORM = sqliteorm.SqLiteORMRepository{}
+	Postgres  = postgres.PostgresRepository{}
 )
 
 type Context struct {

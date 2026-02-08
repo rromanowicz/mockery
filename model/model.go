@@ -2,6 +2,9 @@
 package model
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -11,36 +14,35 @@ import (
 )
 
 type Mock struct {
-	ID                    int64           `json:"id"`
-	Method                string          `json:"method" validate:"notEmpty,httpMethod"`
-	Path                  string          `json:"path,omitempty"`
-	RegexPath             string          `json:"regexPath,omitempty"`
-	RequestHeaderMatchers []HeaderMatcher `json:"requestHeaderMatchers,omitempty"`
-	RequestQueryMatchers  []QueryMatcher  `json:"requestQueryMatchers,omitempty"`
-	RequestBodyMatchers   []BodyMatcher   `json:"requestBodyMatchers,omitempty"`
-	ResponseStatus        int             `json:"responseStatus" validate:"httpStatus"`
-	ResponseBody          any             `json:"responseBody"`
+	ID                    int64    `json:"id"`
+	Method                string   `json:"method" validate:"notEmpty,httpMethod"`
+	Path                  string   `json:"path,omitempty"`
+	RegexPath             string   `json:"regexPath,omitempty"`
+	RequestHeaderMatchers Matchers `json:"requestHeaderMatchers,omitempty" gorm:"type:jsonb"`
+	RequestQueryMatchers  Matchers `json:"requestQueryMatchers,omitempty" gorm:"type:jsonb"`
+	RequestBodyMatchers   Matchers `json:"requestBodyMatchers,omitempty" gorm:"type:jsonb"`
+	ResponseStatus        int      `json:"responseStatus" validate:"httpStatus"`
+	ResponseBody          JSONB    `json:"responseBody" gorm:"type:jsonb"`
 }
 
-type QueryMatcher struct {
-	ParamName     string `json:"param"`
-	ExpectedValue any    `json:"value"`
-}
+type Matchers []Matcher
 
-type BodyMatcher struct {
-	JSONPathString string `json:"jsonPath"`
-	ExpectedValue  any    `json:"value"`
-}
-
-type HeaderMatcher struct {
-	HeaderName    string `json:"name"`
-	ExpectedValue string `json:"value"`
+type Matcher struct {
+	Key   string `json:"key"`
+	Value any    `json:"value"`
 }
 
 type RegexMatcher struct {
-	ID     int64
-	Method string
-	Regexp *regexp.Regexp
+	ID        int64
+	Method    string
+	RegexPath RegexPath `gorm:"name:regex_path"`
+}
+
+type RegexPath string
+
+func (rp RegexPath) Compile() *regexp.Regexp {
+	compiled, _ := regexp.Compile(string(rp))
+	return compiled
 }
 
 func (m Mock) Validate() []string {
@@ -81,7 +83,7 @@ func validateMissingData(mock Mock, validationErrors *[]string) {
 func validateBodyMatchers(mock Mock, validationErrors *[]string) {
 	for i := range mock.RequestBodyMatchers {
 		matcher := mock.RequestBodyMatchers[i]
-		if len(matcher.JSONPathString) == 0 && len(fmt.Sprint(matcher.ExpectedValue)) == 0 {
+		if len(matcher.Key) == 0 && len(fmt.Sprint(matcher.Value)) == 0 {
 			*validationErrors = append(*validationErrors, "Invalid BodyMatcher. Both values must be provided.")
 			break
 		}
@@ -91,7 +93,7 @@ func validateBodyMatchers(mock Mock, validationErrors *[]string) {
 func validateQueryMatchers(mock Mock, validationErrors *[]string) {
 	for i := range mock.RequestQueryMatchers {
 		matcher := mock.RequestQueryMatchers[i]
-		if len(matcher.ParamName) == 0 && len(fmt.Sprint(matcher.ExpectedValue)) == 0 {
+		if len(matcher.Key) == 0 && len(fmt.Sprint(matcher.Value)) == 0 {
 			*validationErrors = append(*validationErrors, "Invalid QueryMatcher. Both values must be provided.")
 			break
 		}
@@ -101,7 +103,7 @@ func validateQueryMatchers(mock Mock, validationErrors *[]string) {
 func validateHeaderMatchers(mock Mock, validationErrors *[]string) {
 	for i := range mock.RequestHeaderMatchers {
 		matcher := mock.RequestHeaderMatchers[i]
-		if len(matcher.HeaderName) == 0 && len(fmt.Sprint(matcher.ExpectedValue)) == 0 {
+		if len(matcher.Key) == 0 && len(fmt.Sprint(matcher.Value)) == 0 {
 			*validationErrors = append(*validationErrors, "Invalid HeaderMatcher. Both values must be provided.")
 			break
 		}
@@ -118,4 +120,30 @@ func validatePath(mock Mock, validationErrors *[]string) {
 			*validationErrors = append(*validationErrors, fmt.Sprintf("Invalid RegexPath. %s is not a valid expression.", mock.RegexPath))
 		}
 	}
+}
+
+type JSONB map[string]any
+
+func (a JSONB) Value() (driver.Value, error) {
+	return json.Marshal(a)
+}
+
+func (a *JSONB) Scan(value any) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+	return json.Unmarshal(b, &a)
+}
+
+func (a Matchers) Value() (driver.Value, error) {
+	return json.Marshal(a)
+}
+
+func (a *Matchers) Scan(value any) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+	return json.Unmarshal(b, &a)
 }

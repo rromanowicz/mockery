@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"sync"
 
@@ -172,17 +171,10 @@ func (mr SqLiteRepository) GetRegexpMatchers(method string) ([]model.RegexMatche
 	matchers := []model.RegexMatcher{}
 	for rows.Next() {
 		var matcher model.RegexMatcher
-		var regex string
-		err := rows.Scan(&matcher.ID, &matcher.Method, &regex)
+		err := rows.Scan(&matcher.ID, &matcher.Method, &matcher.RegexPath)
 		if err != nil {
 			log.Println(err.Error())
 		}
-		compiledRegexp, err := regexp.Compile(regex)
-		if err != nil {
-			log.Println(err.Error())
-			continue
-		}
-		matcher.Regexp = compiledRegexp
 		matchers = append(matchers, matcher)
 	}
 	return matchers, nil
@@ -200,19 +192,19 @@ func parseResult(rows *sql.Rows) []model.Mock {
 		if err != nil {
 			log.Println(err.Error())
 		}
-		var parsedBodyMatchers []model.BodyMatcher
+		var parsedBodyMatchers model.Matchers
 		json.Unmarshal([]byte(bodyMatchers), &parsedBodyMatchers)
 		mock.RequestBodyMatchers = parsedBodyMatchers
 
-		var parsedQueryMatchers []model.QueryMatcher
+		var parsedQueryMatchers model.Matchers
 		json.Unmarshal([]byte(queryMatchers), &parsedQueryMatchers)
 		mock.RequestQueryMatchers = parsedQueryMatchers
 
-		var parsedHeaderMatchers []model.HeaderMatcher
+		var parsedHeaderMatchers model.Matchers
 		json.Unmarshal([]byte(headerMatchers), &parsedHeaderMatchers)
 		mock.RequestHeaderMatchers = parsedHeaderMatchers
 
-		var parsedResponse any
+		var parsedResponse model.JSONB
 		json.Unmarshal([]byte(strings.ReplaceAll(response, "\\\"", "\"")), &parsedResponse)
 		mock.ResponseBody = parsedResponse
 

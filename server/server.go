@@ -14,8 +14,9 @@ import (
 type Database string
 
 const (
-	SqLite   Database = "SqLite"
-	Postgres Database = "Postgres"
+	SqLite    Database = "SqLite"
+	SqLiteORM Database = "SqLiteORM"
+	Postgres  Database = "Postgres"
 )
 
 var ctx context.Context
@@ -26,6 +27,8 @@ func StartMockServer(port *int, dbType *string) error {
 	switch Database(*dbType) {
 	case SqLite:
 		repo = context.SqLite
+	case SqLiteORM:
+		repo = context.SqLiteORM
 	case Postgres:
 		repo = context.Postgres
 	default:
