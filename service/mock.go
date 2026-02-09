@@ -4,6 +4,7 @@ package service
 import (
 	"github.com/rromanowicz/mockery/db"
 	"github.com/rromanowicz/mockery/model"
+	"gorm.io/gorm"
 )
 
 type MockInt interface {
@@ -21,8 +22,8 @@ type MockService struct {
 	Repository db.MockRepoInt
 }
 
-func InitMockService(repo db.MockRepoInt, dbParams model.DBParams) MockService {
-	return MockService{Repository: repo.InitDB(dbParams)}
+func InitMockService(repo db.MockRepoInt, dbDriverFn func(str string) gorm.Dialector, dbParams model.DBParams) MockService {
+	return MockService{Repository: repo.InitDB(dbDriverFn, dbParams)}
 }
 
 func (ms MockService) Get(method string, path string) ([]model.Mock, error) {

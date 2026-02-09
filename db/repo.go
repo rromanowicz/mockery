@@ -11,12 +11,13 @@ import (
 	"strings"
 
 	"github.com/rromanowicz/mockery/model"
+	"gorm.io/gorm"
 )
 
 const dir = "./stubs"
 
 type MockRepoInt interface {
-	InitDB(dbParams model.DBParams) MockRepoInt
+	InitDB(driverFn func(str string) gorm.Dialector, dbParams model.DBParams) MockRepoInt
 	CloseDB()
 	FindByMethodAndPath(method string, path string) ([]model.Mock, error)
 	FindByID(id int64) (model.Mock, error)
@@ -35,7 +36,7 @@ func ExportMocks(mocks []model.Mock) ([]string, error) {
 	for i := range mocks {
 		mockData, err := json.Marshal(mocks[i])
 		if err != nil {
-			log.Printf("Failed to marshall mock [id=%v]. Error: %v", mocks[i].ID, err.Error())
+			log.Printf("Failed to marshal mock [id=%v]. Error: %v", mocks[i].ID, err.Error())
 			continue
 		}
 		var urlPath string

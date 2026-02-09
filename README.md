@@ -16,8 +16,7 @@ Features:
 Persistence:
 
 - [x] SqLite
-- [x] SqLite_ORM
-- [ ] PostgreSQL
+- [x] PostgreSQL
 
 ## [ToC]
 
@@ -42,7 +41,7 @@ Set up connection details in `.config` file
 
 ```json
 {
-  "dbType": "SqLiteORM",
+  "dbType": "SqLite",
   "port": 8080,
   "dbConfig": {
     "sqlite": {

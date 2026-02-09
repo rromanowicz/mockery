@@ -2,17 +2,20 @@
 package context
 
 import (
+	"fmt"
+	"log"
+
 	"github.com/rromanowicz/mockery/db"
-	"github.com/rromanowicz/mockery/db/orm"
-	"github.com/rromanowicz/mockery/db/sqlite"
 	"github.com/rromanowicz/mockery/model"
 	"github.com/rromanowicz/mockery/service"
+	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 var (
-	SqLite    = sqlite.SqLiteRepository{}
-	SqLiteORM = orm.OrmRepository{}
-	Postgres  = orm.OrmRepository{}
+	SqLite   = db.MockRepoImpl{}
+	Postgres = db.MockRepoImpl{}
 )
 
 type Context struct {
@@ -20,11 +23,40 @@ type Context struct {
 	MockService service.MockInt
 }
 
-func InitContext(dbParams model.DBParams, repo db.MockRepoInt) Context {
+func InitContext(config model.Config) (Context, error) {
+	var repo db.MockRepoInt
+	var dbParams model.DBParams
+	var dbDriverFn func(str string) gorm.Dialector
+	dbType := model.Database(config.DBType)
+	switch dbType {
+	case model.SqLite:
+		repo = SqLite
+		dbParams = config.DBConfig.SqLite
+	case model.Postgres:
+		repo = Postgres
+		dbParams = config.DBConfig.Postgres
+	default:
+		if len(dbType) == 0 {
+			return Context{}, fmt.Errorf("db type not set")
+		}
+		return Context{}, fmt.Errorf("unsupported DB Type")
+	}
+
+	switch config.DBType {
+	case model.SqLite:
+		dbDriverFn = sqlite.Open
+		dbParams = config.DBConfig.SqLite
+	case model.Postgres:
+		dbDriverFn = postgres.Open
+		dbParams = config.DBConfig.Postgres
+	}
+
+	log.Printf("Starting server [Port: %v, DB: %s]", config.Port, config.DBType)
+
 	return Context{
 		Repository:  repo,
-		MockService: service.InitMockService(repo, dbParams),
-	}
+		MockService: service.InitMockService(repo, dbDriverFn, dbParams),
+	}, nil
 }
 
 func (ctx Context) Close() {

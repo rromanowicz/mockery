@@ -9,7 +9,6 @@ import (
 	"os"
 
 	"github.com/rromanowicz/mockery/context"
-	"github.com/rromanowicz/mockery/db"
 	"github.com/rromanowicz/mockery/model"
 	"github.com/rromanowicz/mockery/routing"
 )
@@ -21,45 +20,27 @@ func StartMockServer(portOverride *int, dbTypeOverride *string) error {
 	if err != nil {
 		panic(err)
 	}
-	var repo db.MockRepoInt
-	var dbParams model.DBParams
-	port := portOverride
-	dbType := model.Database(*dbTypeOverride)
 
-	if len(*dbTypeOverride) == 0 {
-		dbType = config.DBType
+	if len(*dbTypeOverride) != 0 {
+		config.DBType = model.Database(*dbTypeOverride)
 	}
-	if *portOverride == 0 {
-		port = &config.Port
+	if *portOverride != 0 {
+		config.Port = *portOverride
 	}
 
-	switch dbType {
-	case model.SqLite:
-		repo = context.SqLite
-		dbParams = config.DBConfig.SqLite
-	case model.SqLiteORM:
-		repo = context.SqLiteORM
-		dbParams = config.DBConfig.SqLite
-	case model.Postgres:
-		repo = context.Postgres
-		dbParams = config.DBConfig.Postgres
-	default:
-		if len(dbType) == 0 {
-			return fmt.Errorf("db type not set")
-		}
-		return fmt.Errorf("unsupported DB Type")
+	ctx, err = context.InitContext(config)
+	if err != nil {
+		panic(err)
 	}
 
-	log.Printf("Starting server [Port: %v, DB: %s]", *port, dbType)
-
-	ctx = context.InitContext(dbParams, repo)
 	defer ctx.Close()
 
 	handler := &routing.RegexpHandler{}
 	routing.RegisterRoutes(ctx, handler)
 
+	print()
 	server := http.Server{
-		Addr:    fmt.Sprintf(":%v", *port),
+		Addr:    fmt.Sprintf(":%v", config.Port),
 		Handler: handler,
 	}
 
