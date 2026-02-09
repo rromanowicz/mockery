@@ -27,16 +27,16 @@ func (mr SqLiteRepository) InitDB() db.MockRepoInt {
 		log.Fatal(err.Error())
 	}
 	sqlStmt := `
- CREATE TABLE IF NOT EXISTS mock (
+ CREATE TABLE IF NOT EXISTS mocks (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   method TEXT,
   path TEXT,
   regex_path TEXT,
-	request_header_matchers TEXT,
-	request_query_matchers TEXT,
-	request_body_matchers TEXT,
+	request_header_matchers JSONB,
+	request_query_matchers JSONB,
+	request_body_matchers JSONB,
 	response_status INTEGER,
-	response_body TEXT
+	response_body JSONB
  );`
 
 	_, err = DB.Exec(sqlStmt)
@@ -53,7 +53,7 @@ func (mr SqLiteRepository) CloseDB() {
 }
 
 func (mr SqLiteRepository) FindByMethodAndPath(method string, path string) ([]model.Mock, error) {
-	rows, err := mr.DBConn.Query("select * from mock where method=? and path is not null and path=?", method, path)
+	rows, err := mr.DBConn.Query("select * from mocks where method=? and path is not null and path=?", method, path)
 	if err != nil {
 		log.Println(err.Error())
 		return []model.Mock{}, err
@@ -63,7 +63,7 @@ func (mr SqLiteRepository) FindByMethodAndPath(method string, path string) ([]mo
 }
 
 func (mr SqLiteRepository) GetAll() ([]model.Mock, error) {
-	rows, err := mr.DBConn.Query("select * from mock")
+	rows, err := mr.DBConn.Query("select * from mocks")
 	if err != nil {
 		log.Println(err.Error())
 		return []model.Mock{}, err
@@ -73,7 +73,7 @@ func (mr SqLiteRepository) GetAll() ([]model.Mock, error) {
 }
 
 func (mr SqLiteRepository) FindByID(id int64) (model.Mock, error) {
-	rows, err := mr.DBConn.Query("select * from mock where id=?", id)
+	rows, err := mr.DBConn.Query("select * from mocks where id=?", id)
 	if err != nil {
 		log.Println(err.Error())
 		return model.Mock{}, err
@@ -88,7 +88,7 @@ func (mr SqLiteRepository) FindByID(id int64) (model.Mock, error) {
 
 func (mr SqLiteRepository) FindByIDs(ids []int64) ([]model.Mock, error) {
 	idString := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(ids)), ","), "[]")
-	rows, err := mr.DBConn.Query("select * from mock where id in (?)", idString)
+	rows, err := mr.DBConn.Query("select * from mocks where id in (?)", idString)
 	if err != nil {
 		log.Println(err.Error())
 		return []model.Mock{}, err
@@ -104,7 +104,7 @@ func (mr SqLiteRepository) FindByIDs(ids []int64) ([]model.Mock, error) {
 func (mr SqLiteRepository) DeleteByID(id int64) error {
 	defer mr.lock.Unlock()
 	mr.lock.Lock()
-	_, err := mr.DBConn.Exec("delete from mock where id=?", id)
+	_, err := mr.DBConn.Exec("delete from mocks where id=?", id)
 	return err
 }
 
@@ -116,9 +116,9 @@ func (mr SqLiteRepository) Save(mock model.Mock) (model.Mock, error) {
 	queryMatchersJs, _ := json.Marshal(mock.RequestQueryMatchers)
 	headerMatchersJs, _ := json.Marshal(mock.RequestHeaderMatchers)
 	result, err := mr.DBConn.Exec(
-		`insert into mock(method, path, regex_path, request_header_matchers, request_query_matchers, request_body_matchers, response_status, response_body)
+		`insert into mocks(method, path, regex_path, request_header_matchers, request_query_matchers, request_body_matchers, response_status, response_body)
 		values (?, ?, ?, ?, ?, ?, ?, ?)`,
-		mock.Method, mock.Path, mock.RegexPath, string(headerMatchersJs), string(queryMatchersJs), string(bodyMatchersJs), mock.ResponseStatus, string(responseBodyJs))
+		mock.Method, mock.Path, mock.RegexPath, headerMatchersJs, queryMatchersJs, bodyMatchersJs, mock.ResponseStatus, responseBodyJs)
 	if err != nil {
 		log.Printf("Failed to save. %s", err.Error())
 		return model.Mock{}, err
@@ -162,7 +162,7 @@ func (mr SqLiteRepository) Export() ([]string, error) {
 }
 
 func (mr SqLiteRepository) GetRegexpMatchers(method string) ([]model.RegexMatcher, error) {
-	rows, err := mr.DBConn.Query("select id, method, regex_path from mock where method=? and regex_path is not null and regex_path != ''", method)
+	rows, err := mr.DBConn.Query("select id, method, regex_path from mocks where method=? and regex_path is not null and regex_path != ''", method)
 	if err != nil {
 		log.Println(err.Error())
 		return []model.RegexMatcher{}, err
@@ -184,28 +184,28 @@ func parseResult(rows *sql.Rows) []model.Mock {
 	mocks := []model.Mock{}
 	for rows.Next() {
 		var mock model.Mock
-		var bodyMatchers string
-		var queryMatchers string
-		var headerMatchers string
-		var response string
+		var bodyMatchers []byte
+		var queryMatchers []byte
+		var headerMatchers []byte
+		var response []byte
 		err := rows.Scan(&mock.ID, &mock.Method, &mock.Path, &mock.RegexPath, &headerMatchers, &queryMatchers, &bodyMatchers, &mock.ResponseStatus, &response)
 		if err != nil {
 			log.Println(err.Error())
 		}
 		var parsedBodyMatchers model.Matchers
-		json.Unmarshal([]byte(bodyMatchers), &parsedBodyMatchers)
+		json.Unmarshal(bodyMatchers, &parsedBodyMatchers)
 		mock.RequestBodyMatchers = parsedBodyMatchers
 
 		var parsedQueryMatchers model.Matchers
-		json.Unmarshal([]byte(queryMatchers), &parsedQueryMatchers)
+		json.Unmarshal(queryMatchers, &parsedQueryMatchers)
 		mock.RequestQueryMatchers = parsedQueryMatchers
 
 		var parsedHeaderMatchers model.Matchers
-		json.Unmarshal([]byte(headerMatchers), &parsedHeaderMatchers)
+		json.Unmarshal(headerMatchers, &parsedHeaderMatchers)
 		mock.RequestHeaderMatchers = parsedHeaderMatchers
 
 		var parsedResponse model.JSONB
-		json.Unmarshal([]byte(strings.ReplaceAll(response, "\\\"", "\"")), &parsedResponse)
+		json.Unmarshal(response, &parsedResponse)
 		mock.ResponseBody = parsedResponse
 
 		mocks = append(mocks, mock)

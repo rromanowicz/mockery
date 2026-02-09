@@ -22,7 +22,7 @@ type SqLiteORMRepository struct {
 func (mr SqLiteORMRepository) InitDB() db.MockRepoInt {
 	log.Println("Initializing SqLiteORM repository.")
 
-	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open("file:app.db?cache=shared&mode=rwc&_journal_mode=WAL"), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}

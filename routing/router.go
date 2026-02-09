@@ -187,7 +187,6 @@ func fetchMocks(ctx context.Context, method string, path string) ([]model.Mock, 
 		var ids []int64
 		for i := range regexMatchers {
 			if regexMatchers[i].RegexPath.Compile().MatchString(path) {
-				log.Println(regexMatchers[i])
 				ids = append(ids, regexMatchers[i].ID)
 			}
 		}

@@ -5,16 +5,18 @@ Simple and lightweight mock server.
 Features:
 
 - [x] Path matching
+- [x] Regex Path matching
 - [x] Query matching
-- [x] Header matching
 - [x] Body matching
-- [x] Regex matching
+- [x] Header matching
+
 - [x] JSON File export
 - [x] JSON File import
 
 Persistence:
 
 - [x] SqLite
+- [x] SqLite_ORM
 - [ ] PostgreSQL
 
 ## [ToC]
