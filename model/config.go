@@ -12,7 +12,7 @@ const (
 	Postgres       Database = "Postgres"
 	defaultDir     string   = "./stubs"
 	defaultPort    int      = 8080
-	defaultConnStr string   = "file:app.db?cache=shared&mode=rwc&_journal_mode=WAL"
+	defaultConnStr string   = "file:mockery.db?cache=shared&mode=rwc&_journal_mode=WAL"
 )
 
 type Config struct {

@@ -2,57 +2,105 @@
 package postgres
 
 import (
-	"database/sql"
+	"context"
+	"fmt"
+	"log"
+	"strings"
+	"sync"
 
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/rromanowicz/mockery/db"
 	"github.com/rromanowicz/mockery/model"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 type PostgresRepository struct {
-	DBConn *sql.DB
+	DBConn *gorm.DB
+	lock   *sync.RWMutex
 }
 
 func (mr PostgresRepository) InitDB(dbParams model.DBParams) db.MockRepoInt {
-	panic("Unimplemented")
+	log.Println("Initializing Postgres repository.")
+
+	db, err := gorm.Open(postgres.Open(dbParams.ConnectionString), &gorm.Config{})
+	if err != nil {
+		panic("failed to connect database")
+	}
+
+	db.AutoMigrate(&model.Mock{})
+
+	mr.DBConn = db
+
+	return mr
 }
 
-func (mr PostgresRepository) CloseDB() {
-	mr.DBConn.Close()
-}
-
+func (mr PostgresRepository) CloseDB() {}
 func (mr PostgresRepository) FindByMethodAndPath(method string, path string) ([]model.Mock, error) {
-	return []model.Mock{}, nil
-}
-
-func (mr PostgresRepository) GetAll() ([]model.Mock, error) {
-	return []model.Mock{}, nil
+	mocks, err := gorm.G[model.Mock](mr.DBConn).Where("method=? and path is not null and path=?", method, path).Find(context.Background())
+	return mocks, err
 }
 
 func (mr PostgresRepository) FindByID(id int64) (model.Mock, error) {
-	return model.Mock{}, nil
+	ctx := context.Background()
+	mock, err := gorm.G[model.Mock](mr.DBConn).Where("id = ?", id).First(ctx)
+	return mock, err
 }
 
-func (mr PostgresRepository) FindByIDs(id []int64) ([]model.Mock, error) {
-	return []model.Mock{}, nil
+func (mr PostgresRepository) FindByIDs(ids []int64) ([]model.Mock, error) {
+	idString := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(ids)), ","), "[]")
+	mocks, err := gorm.G[model.Mock](mr.DBConn).Where("id in (?)", idString).Find(context.Background())
+	return mocks, err
 }
 
 func (mr PostgresRepository) DeleteByID(id int64) error {
-	return nil
+	_, err := gorm.G[model.Mock](mr.DBConn).Where("id = ?", id).Delete(context.Background())
+	return err
 }
 
 func (mr PostgresRepository) Save(mock model.Mock) (model.Mock, error) {
-	return model.Mock{}, nil
+	err := gorm.G[model.Mock](mr.DBConn).Create(context.Background(), &mock)
+	if err != nil {
+		panic(err)
+	}
+	return mock, err
+}
+
+func (mr PostgresRepository) GetAll() ([]model.Mock, error) {
+	mocks, err := gorm.G[model.Mock](mr.DBConn).Find(context.Background())
+	return mocks, err
 }
 
 func (mr PostgresRepository) Import() ([]string, error) {
-	return []string{}, nil
+	mocks, files, err := db.ImportMocks()
+	if err != nil {
+		log.Println("Failed to read mocks.")
+		return []string{}, err
+	}
+	for i := range mocks {
+		_, err = mr.Save(mocks[i])
+		if err != nil {
+			log.Println("Failed to save mock.")
+			return []string{}, err
+		}
+	}
+	return files, nil
 }
 
 func (mr PostgresRepository) Export() ([]string, error) {
-	return []string{}, nil
+	mocks, err := mr.GetAll()
+	if err != nil {
+		log.Println("Failed to fetch mocks.")
+		return []string{}, err
+	}
+	files, err := db.ExportMocks(mocks)
+	if err != nil {
+		log.Println("Failed to save mock.")
+		return []string{}, err
+	}
+	return files, nil
 }
 
 func (mr PostgresRepository) GetRegexpMatchers(method string) ([]model.RegexMatcher, error) {
-	return []model.RegexMatcher{}, nil
+	mocks, err := gorm.G[model.RegexMatcher](mr.DBConn).Raw("select id, method, regex_path from mocks where method=? and regex_path is not null and regex_path != ''", method).Find(context.Background())
+	return mocks, err
 }

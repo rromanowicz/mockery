@@ -102,6 +102,5 @@ func (mr SqLiteORMRepository) Export() ([]string, error) {
 
 func (mr SqLiteORMRepository) GetRegexpMatchers(method string) ([]model.RegexMatcher, error) {
 	mocks, err := gorm.G[model.RegexMatcher](mr.DBConn).Raw("select id, method, regex_path from mocks where method=? and regex_path is not null and regex_path != ''", method).Find(context.Background())
-	log.Println(mocks)
 	return mocks, err
 }
