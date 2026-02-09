@@ -21,6 +21,7 @@ Persistence:
 
 ## [ToC]
 
+- [Running](#running)
 - [Schema](#schema)
   - [Class diagram](#class-diagram)
   - [Validations](#validations)
@@ -35,14 +36,47 @@ Persistence:
 
 ## Running
 
-```sh
-./mockery --port=8080 --db=SqLite
+### .config file
+
+Set up connection details in `.config` file
+
+```json
+{
+  "dbType": "SqLiteORM",
+  "port": 8080,
+  "dbConfig": {
+    "sqlite": {
+      "connStr": "file:app.db?cache=shared&mode=rwc&_journal_mode=WAL"
+    },
+    "postgres": {
+      "connStr": "postgresql://postgres:password@localhost/mockery?sslmode=disable&application_name=mockery"
+    }
+  },
+  "exportDir": "./stubs",
+  "importDir": "./stubs"
+}
 ```
 
-Skip flags to use default values
+### Overrides
+
+Override values from `.config` file by providing additional arguments
+
+```sh
+./mockery --port=8081 --db=SqLite
+```
+
+### Default values
+
+Skip .config file / override flags to use default values
 
 - Port: 8080
 - Db: SqLite
+- Connection string : file:app.db?cache=shared&mode=rwc&\_journal_mode=WAL
+
+### Config validations
+
+- If `dbType` is provided in config file or as an override flag, the connection string for is required.
+- Other parameters will use default values
 
 ## Schema
 
@@ -163,9 +197,11 @@ classDiagram
     ```
 
 - DELETE /config?id=1
+
   - ResponseStatus: 200
 
 - GET /config/import
+
   - ResponseStatus: 200
   - ResponseBody : []string
     - List of imported files
@@ -345,7 +381,6 @@ classDiagram
       "bar": [{ "baz": 3 }, { "baz": 4 }]
     }
     ```
-
 
 ### Regexp Matching
 

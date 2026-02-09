@@ -6,6 +6,7 @@ import (
 	"github.com/rromanowicz/mockery/db/postgres"
 	"github.com/rromanowicz/mockery/db/sqlite"
 	"github.com/rromanowicz/mockery/db/sqliteorm"
+	"github.com/rromanowicz/mockery/model"
 	"github.com/rromanowicz/mockery/service"
 )
 
@@ -20,10 +21,10 @@ type Context struct {
 	MockService service.MockInt
 }
 
-func InitContext(repo db.MockRepoInt) Context {
+func InitContext(dbParams model.DBParams, repo db.MockRepoInt) Context {
 	return Context{
 		Repository:  repo,
-		MockService: service.InitMockService(repo),
+		MockService: service.InitMockService(repo, dbParams),
 	}
 }
 

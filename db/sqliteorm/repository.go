@@ -19,10 +19,10 @@ type SqLiteORMRepository struct {
 	lock   *sync.RWMutex
 }
 
-func (mr SqLiteORMRepository) InitDB() db.MockRepoInt {
+func (mr SqLiteORMRepository) InitDB(dbParams model.DBParams) db.MockRepoInt {
 	log.Println("Initializing SqLiteORM repository.")
 
-	db, err := gorm.Open(sqlite.Open("file:app.db?cache=shared&mode=rwc&_journal_mode=WAL"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(dbParams.ConnectionString), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}

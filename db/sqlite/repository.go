@@ -19,10 +19,10 @@ type SqLiteRepository struct {
 	lock   *sync.RWMutex
 }
 
-func (mr SqLiteRepository) InitDB() db.MockRepoInt {
+func (mr SqLiteRepository) InitDB(dbParams model.DBParams) db.MockRepoInt {
 	log.Println("Initializing SqLite repository.")
 
-	DB, err := sql.Open("sqlite3", "file:app.db?cache=shared&mode=rwc&_journal_mode=WAL")
+	DB, err := sql.Open("sqlite3", dbParams.ConnectionString)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

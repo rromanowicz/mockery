@@ -8,8 +8,8 @@ import (
 )
 
 func main() {
-	serverPort := flag.Int("port", 8080, "Server port.")
-	serverDB := flag.String("db", "SqLite", "Database type.")
+	serverPort := flag.Int("port", 0, "Server port.")
+	serverDB := flag.String("db", "", "Database type.")
 	flag.Parse()
 
 	err := server.StartMockServer(serverPort, serverDB)

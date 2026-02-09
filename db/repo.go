@@ -16,7 +16,7 @@ import (
 const dir = "./stubs"
 
 type MockRepoInt interface {
-	InitDB() MockRepoInt
+	InitDB(dbParams model.DBParams) MockRepoInt
 	CloseDB()
 	FindByMethodAndPath(method string, path string) ([]model.Mock, error)
 	FindByID(id int64) (model.Mock, error)

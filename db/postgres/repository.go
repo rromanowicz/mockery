@@ -13,7 +13,7 @@ type PostgresRepository struct {
 	DBConn *sql.DB
 }
 
-func (mr PostgresRepository) InitDB() db.MockRepoInt {
+func (mr PostgresRepository) InitDB(dbParams model.DBParams) db.MockRepoInt {
 	panic("Unimplemented")
 }
 

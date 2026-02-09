@@ -21,8 +21,8 @@ type MockService struct {
 	Repository db.MockRepoInt
 }
 
-func InitMockService(repo db.MockRepoInt) MockService {
-	return MockService{Repository: repo.InitDB()}
+func InitMockService(repo db.MockRepoInt, dbParams model.DBParams) MockService {
+	return MockService{Repository: repo.InitDB(dbParams)}
 }
 
 func (ms MockService) Get(method string, path string) ([]model.Mock, error) {
