@@ -8,12 +8,11 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=1 go build -o router .
+RUN CGO_ENABLED=1 go build -o mockery .
 FROM alpine:latest
 WORKDIR /root/
-COPY --from=builder /app/router .
+COPY --from=builder /app/mockery .
+COPY .config .
+# COPY stubs/ ./stubs/
 EXPOSE 8080
-CMD ["./router"]
-
-# docker build -t router-app .
-# docker run --name "router-app" -p 8080:8080 router-app
+CMD ["./mockery"]

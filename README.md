@@ -77,6 +77,19 @@ Skip .config file / override flags to use default values
 - If `dbType` is provided in config file or as an override flag, the connection string for is required.
 - Other parameters will use default values
 
+### Docker
+Build image
+```sh
+docker build -t mockery .
+```
+
+Run container
+```sh
+docker run --name "mockery" -p 8080:8080 mockery
+```
+
+> Uncomment `# COPY stubs/ ./stubs/` to copy stubs for import.
+
 ## Schema
 
 ### Class diagram
