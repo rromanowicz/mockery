@@ -1,5 +1,5 @@
-// Package sqliteorm
-package sqliteorm
+// Package orm
+package orm
 
 import (
 	"context"
@@ -10,19 +10,18 @@ import (
 
 	"github.com/rromanowicz/mockery/db"
 	"github.com/rromanowicz/mockery/model"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
-type SqLiteORMRepository struct {
+type OrmRepository struct {
 	DBConn *gorm.DB
 	lock   *sync.RWMutex
 }
 
-func (mr SqLiteORMRepository) InitDB(dbParams model.DBParams) db.MockRepoInt {
-	log.Println("Initializing SqLiteORM repository.")
+func (mr OrmRepository) InitDB(dbParams model.DBParams) db.MockRepoInt {
+	log.Println("Initializing Postgres repository.")
 
-	db, err := gorm.Open(sqlite.Open(dbParams.ConnectionString), &gorm.Config{})
+	db, err := gorm.Open(dbParams.Driver(dbParams.ConnectionString), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
@@ -34,30 +33,30 @@ func (mr SqLiteORMRepository) InitDB(dbParams model.DBParams) db.MockRepoInt {
 	return mr
 }
 
-func (mr SqLiteORMRepository) CloseDB() {}
-func (mr SqLiteORMRepository) FindByMethodAndPath(method string, path string) ([]model.Mock, error) {
+func (mr OrmRepository) CloseDB() {}
+func (mr OrmRepository) FindByMethodAndPath(method string, path string) ([]model.Mock, error) {
 	mocks, err := gorm.G[model.Mock](mr.DBConn).Where("method=? and path is not null and path=?", method, path).Find(context.Background())
 	return mocks, err
 }
 
-func (mr SqLiteORMRepository) FindByID(id int64) (model.Mock, error) {
+func (mr OrmRepository) FindByID(id int64) (model.Mock, error) {
 	ctx := context.Background()
 	mock, err := gorm.G[model.Mock](mr.DBConn).Where("id = ?", id).First(ctx)
 	return mock, err
 }
 
-func (mr SqLiteORMRepository) FindByIDs(ids []int64) ([]model.Mock, error) {
+func (mr OrmRepository) FindByIDs(ids []int64) ([]model.Mock, error) {
 	idString := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(ids)), ","), "[]")
 	mocks, err := gorm.G[model.Mock](mr.DBConn).Where("id in (?)", idString).Find(context.Background())
 	return mocks, err
 }
 
-func (mr SqLiteORMRepository) DeleteByID(id int64) error {
+func (mr OrmRepository) DeleteByID(id int64) error {
 	_, err := gorm.G[model.Mock](mr.DBConn).Where("id = ?", id).Delete(context.Background())
 	return err
 }
 
-func (mr SqLiteORMRepository) Save(mock model.Mock) (model.Mock, error) {
+func (mr OrmRepository) Save(mock model.Mock) (model.Mock, error) {
 	err := gorm.G[model.Mock](mr.DBConn).Create(context.Background(), &mock)
 	if err != nil {
 		panic(err)
@@ -65,12 +64,12 @@ func (mr SqLiteORMRepository) Save(mock model.Mock) (model.Mock, error) {
 	return mock, err
 }
 
-func (mr SqLiteORMRepository) GetAll() ([]model.Mock, error) {
+func (mr OrmRepository) GetAll() ([]model.Mock, error) {
 	mocks, err := gorm.G[model.Mock](mr.DBConn).Find(context.Background())
 	return mocks, err
 }
 
-func (mr SqLiteORMRepository) Import() ([]string, error) {
+func (mr OrmRepository) Import() ([]string, error) {
 	mocks, files, err := db.ImportMocks()
 	if err != nil {
 		log.Println("Failed to read mocks.")
@@ -86,7 +85,7 @@ func (mr SqLiteORMRepository) Import() ([]string, error) {
 	return files, nil
 }
 
-func (mr SqLiteORMRepository) Export() ([]string, error) {
+func (mr OrmRepository) Export() ([]string, error) {
 	mocks, err := mr.GetAll()
 	if err != nil {
 		log.Println("Failed to fetch mocks.")
@@ -100,7 +99,7 @@ func (mr SqLiteORMRepository) Export() ([]string, error) {
 	return files, nil
 }
 
-func (mr SqLiteORMRepository) GetRegexpMatchers(method string) ([]model.RegexMatcher, error) {
+func (mr OrmRepository) GetRegexpMatchers(method string) ([]model.RegexMatcher, error) {
 	mocks, err := gorm.G[model.RegexMatcher](mr.DBConn).Raw("select id, method, regex_path from mocks where method=? and regex_path is not null and regex_path != ''", method).Find(context.Background())
 	return mocks, err
 }

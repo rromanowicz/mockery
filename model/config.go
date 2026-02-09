@@ -2,6 +2,10 @@ package model
 
 import (
 	"fmt"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 type Database string
@@ -30,6 +34,12 @@ type DBConfig struct {
 
 type DBParams struct {
 	ConnectionString string `json:"connStr"`
+	Driver           func(str string) gorm.Dialector
+}
+
+func (dc *DBConfig) setDrivers() {
+	dc.SqLite.Driver = sqlite.Open
+	dc.Postgres.Driver = postgres.Open
 }
 
 func (c *Config) Validate(port *int, dbType *string) error {
@@ -61,5 +71,6 @@ func (c *Config) Validate(port *int, dbType *string) error {
 		c.DBType = SqLite
 		c.DBConfig.SqLite.ConnectionString = defaultConnStr
 	}
+	c.DBConfig.setDrivers()
 	return nil
 }

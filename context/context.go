@@ -3,17 +3,16 @@ package context
 
 import (
 	"github.com/rromanowicz/mockery/db"
-	"github.com/rromanowicz/mockery/db/postgres"
+	"github.com/rromanowicz/mockery/db/orm"
 	"github.com/rromanowicz/mockery/db/sqlite"
-	"github.com/rromanowicz/mockery/db/sqliteorm"
 	"github.com/rromanowicz/mockery/model"
 	"github.com/rromanowicz/mockery/service"
 )
 
 var (
 	SqLite    = sqlite.SqLiteRepository{}
-	SqLiteORM = sqliteorm.SqLiteORMRepository{}
-	Postgres  = postgres.PostgresRepository{}
+	SqLiteORM = orm.OrmRepository{}
+	Postgres  = orm.OrmRepository{}
 )
 
 type Context struct {
