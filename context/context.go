@@ -53,9 +53,19 @@ func InitContext(config model.Config) (Context, error) {
 
 	log.Printf("Starting server [Port: %v, DB: %s]", config.Port, config.DBType)
 
+	service := service.InitMockService(repo, dbDriverFn, dbParams)
+	if config.AutoImport {
+		imported, err := service.Import()
+		if err != nil {
+			log.Println(err)
+		} else {
+			log.Printf("Imported mocks: %v", imported)
+		}
+	}
+
 	return Context{
 		Repository:  repo,
-		MockService: service.InitMockService(repo, dbDriverFn, dbParams),
+		MockService: service,
 	}, nil
 }
 

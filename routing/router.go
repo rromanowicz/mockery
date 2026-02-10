@@ -12,6 +12,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/rromanowicz/mockery/context"
 	"github.com/rromanowicz/mockery/model"
@@ -225,6 +226,13 @@ func filterMocks(mocks []model.Mock, req *http.Request) (model.Mock, error) {
 
 	if len(matchedMocks) == 0 {
 		return model.Mock{}, errors.New("not matched")
+	}
+	if len(matchedMocks) > 1 {
+		var ids []string
+		for i := range matchedMocks {
+			ids = append(ids, fmt.Sprint(matchedMocks[i].ID))
+		}
+		log.Printf("Multiple mocks matched [%s].", strings.Join(ids, ","))
 	}
 
 	return *matchedMocks[0], nil

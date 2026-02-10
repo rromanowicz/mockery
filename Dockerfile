@@ -12,7 +12,7 @@ RUN CGO_ENABLED=1 go build -o mockery .
 FROM alpine:latest
 WORKDIR /root/
 COPY --from=builder /app/mockery .
-COPY .config .
-# COPY stubs/ ./stubs/
+COPY mockery.yml .
+# COPY .import/ ./.import/
 EXPOSE 8080
 CMD ["./mockery"]

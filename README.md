@@ -35,9 +35,9 @@ Persistence:
 
 ## Running
 
-### .config file
+### Config file
 
-Set up connection details in `.config` file
+Set up connection details in `mockery.yml` file
 
 ```json
 {
@@ -51,14 +51,13 @@ Set up connection details in `.config` file
       "connStr": "postgresql://postgres:password@localhost/mockery?sslmode=disable&application_name=mockery"
     }
   },
-  "exportDir": "./stubs",
-  "importDir": "./stubs"
+  "autoImport": false
 }
 ```
 
 ### Overrides
 
-Override values from `.config` file by providing additional arguments
+Override values from `mockery.yml` file by providing additional arguments
 
 ```sh
 ./mockery --port=8081 --db=SqLite
@@ -66,7 +65,7 @@ Override values from `.config` file by providing additional arguments
 
 ### Default values
 
-Skip .config file / override flags to use default values
+Skip `mockery.yml` file / override flags to use default values
 
 - Port: 8080
 - Db: SqLite
@@ -88,7 +87,7 @@ Run container
 docker run --name "mockery" -p 8080:8080 mockery
 ```
 
-> Uncomment `# COPY stubs/ ./stubs/` to copy stubs for import.
+> Uncomment `# COPY .import/ ./.import/` to copy stubs for import.
 
 ## Schema
 
@@ -213,15 +212,16 @@ classDiagram
   - ResponseStatus: 200
 
 - GET /config/import
-
   - ResponseStatus: 200
   - ResponseBody : []string
     - List of imported files
+> Import directory `.import/`
 
 - GET /config/export
   - ResponseStatus: 200
   - ResponseBody : []string
     - List of exported files
+> Export directory `.export/`
 
 ## Examples
 

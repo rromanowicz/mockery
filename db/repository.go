@@ -17,7 +17,7 @@ type MockRepoImpl struct {
 }
 
 func (mr MockRepoImpl) InitDB(driverFn func(str string) gorm.Dialector, dbParams model.DBParams) MockRepoInt {
-	log.Println("Initializing Postgres repository.")
+	log.Println("Initializing repository.")
 
 	db, err := gorm.Open(driverFn(dbParams.ConnectionString), &gorm.Config{})
 	if err != nil {
@@ -55,11 +55,11 @@ func (mr MockRepoImpl) DeleteByID(id int64) error {
 }
 
 func (mr MockRepoImpl) Save(mock model.Mock) (model.Mock, error) {
-	err := gorm.G[model.Mock](mr.DBConn).Create(context.Background(), &mock)
-	if err != nil {
-		panic(err)
+	result := mr.DBConn.Save(&mock)
+	if result.Error != nil {
+		log.Println(result.Error)
 	}
-	return mock, err
+	return mock, result.Error
 }
 
 func (mr MockRepoImpl) GetAll() ([]model.Mock, error) {

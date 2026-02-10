@@ -14,7 +14,10 @@ import (
 	"gorm.io/gorm"
 )
 
-const dir = "./stubs"
+const (
+	exportDir = "./.export"
+	importDir = "./.import"
+)
 
 type MockRepoInt interface {
 	InitDB(driverFn func(str string) gorm.Dialector, dbParams model.DBParams) MockRepoInt
@@ -31,7 +34,7 @@ type MockRepoInt interface {
 }
 
 func ExportMocks(mocks []model.Mock) ([]string, error) {
-	os.MkdirAll(dir, os.ModePerm)
+	os.MkdirAll(exportDir, os.ModePerm)
 	var files []string
 	for i := range mocks {
 		mockData, err := json.Marshal(mocks[i])
@@ -45,7 +48,7 @@ func ExportMocks(mocks []model.Mock) ([]string, error) {
 		} else {
 			urlPath = strings.ReplaceAll(strings.ReplaceAll(mocks[i].RegexPath, "/", "_"), "\\", "")
 		}
-		fileName := fmt.Sprintf("%s/%v_%s%s.json", dir, mocks[i].ID, mocks[i].Method, urlPath)
+		fileName := fmt.Sprintf("%s/%v_%s%s.json", exportDir, mocks[i].ID, mocks[i].Method, urlPath)
 		err = writeFile(fileName, mockData)
 		if err != nil {
 			log.Printf("Failed to write mock [%s]. Error: %v", fileName, err.Error())
@@ -81,7 +84,7 @@ func ImportMocks() ([]model.Mock, []string, error) {
 }
 
 func listFiles() ([]string, error) {
-	root := os.DirFS(dir)
+	root := os.DirFS(importDir)
 	mdFiles, err := fs.Glob(root, "*.json")
 	if err != nil {
 		log.Println(err.Error())
@@ -90,7 +93,7 @@ func listFiles() ([]string, error) {
 
 	var files []string
 	for _, v := range mdFiles {
-		files = append(files, path.Join(dir, v))
+		files = append(files, path.Join(importDir, v))
 	}
 	return files, nil
 }

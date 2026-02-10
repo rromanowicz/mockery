@@ -2,7 +2,6 @@
 package server
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,12 +10,15 @@ import (
 	"github.com/rromanowicz/mockery/context"
 	"github.com/rromanowicz/mockery/model"
 	"github.com/rromanowicz/mockery/routing"
+	"gopkg.in/yaml.v3"
 )
+
+const configFilePath string = "mockery.yml"
 
 var ctx context.Context
 
 func StartMockServer(portOverride *int, dbTypeOverride *string) error {
-	config, err := ReadConfig(portOverride, dbTypeOverride)
+	config, err := ReadConfig()
 	if err != nil {
 		panic(err)
 	}
@@ -48,17 +50,17 @@ func StartMockServer(portOverride *int, dbTypeOverride *string) error {
 	return server.ListenAndServe()
 }
 
-func ReadConfig(port *int, dbType *string) (model.Config, error) {
+func ReadConfig() (model.Config, error) {
 	var config model.Config
-	contents, err := os.ReadFile("./.config")
+	contents, err := os.ReadFile(configFilePath)
 	if err != nil {
 		log.Println("Failed to read or missing config file. Setting default values.")
 	} else {
-		err = json.Unmarshal(contents, &config)
+		err = yaml.Unmarshal(contents, &config)
 		if err != nil {
 			log.Println("Failed to process config file. Setting default values.")
 		}
 	}
-	err = config.Validate(port, dbType)
+	err = config.Validate()
 	return config, err
 }

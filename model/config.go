@@ -16,29 +16,24 @@ const (
 )
 
 type Config struct {
-	DBType    Database `json:"dbType"`
-	Port      int      `json:"port"`
-	DBConfig  DBConfig `json:"dbConfig"`
-	ExportDir string   `json:"exportDir"`
-	ImportDir string   `json:"importDir"`
+	DBType     Database `json:"dbType" yaml:"dbType"`
+	Port       int      `json:"port" yaml:"port"`
+	DBConfig   DBConfig `json:"dbConfig" yaml:"dbConfig"`
+	ExportDir  string   `json:"exportDir" yaml:"exportDir"`
+	ImportDir  string   `json:"importDir" yaml:"importDir"`
+	AutoImport bool     `json:"autoImport" yaml:"autoImport"`
 }
 
 type DBConfig struct {
-	SqLite   DBParams `json:"sqlite"`
-	Postgres DBParams `json:"postgres"`
+	SqLite   DBParams `json:"sqlite" yaml:"sqlite"`
+	Postgres DBParams `json:"postgres" yaml:"postgres"`
 }
 
 type DBParams struct {
-	ConnectionString string `json:"connStr"`
+	ConnectionString string `json:"connStr" yaml:"connStr"`
 }
 
-func (c *Config) Validate(port *int, dbType *string) error {
-	if *port != 0 {
-		c.Port = *port
-	}
-	if len(*dbType) != 0 {
-		c.DBType = Database(*dbType)
-	}
+func (c *Config) Validate() error {
 	if len(c.ExportDir) == 0 {
 		c.ExportDir = defaultDir
 	}
