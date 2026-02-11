@@ -1,8 +1,8 @@
-dbType: SqLite
+dbType: InMemory
 port: 8080
 dbConfig:
   sqlite:
     connStr: "file:mockery.db?cache=shared&mode=rwc&_journal_mode=WAL"
   postgres:
     connStr: "postgresql://postgres:password@localhost:5432/mockery?sslmode=disable&application_name=mockery"
-autoImport: true
+autoImport: false

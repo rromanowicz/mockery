@@ -73,8 +73,8 @@ func handleConfig(ctx context.Context) func(rw http.ResponseWriter, req *http.Re
 				rw.Write([]byte(err.Error()))
 				return
 			}
-			errors := requestMock.Validate()
-			if len(errors) != 0 {
+			ok, errors := requestMock.Validate()
+			if !ok {
 				rw.WriteHeader(http.StatusBadRequest)
 				errorsJSON, _ := json.Marshal(errors)
 				rw.Write(errorsJSON)
@@ -153,8 +153,9 @@ func handleConfigExport(ctx context.Context) func(rw http.ResponseWriter, req *h
 func handleAll(ctx context.Context) func(rw http.ResponseWriter, req *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		mocks, err := fetchMocks(ctx, req.Method, req.URL.Path)
+		rw.Header().Set("Content-Type", "application/json")
 		if err != nil {
-			rw.WriteHeader(http.StatusNotFound)
+			rw.WriteHeader(http.StatusTeapot)
 			rw.Write([]byte(err.Error()))
 			return
 		}
@@ -164,7 +165,6 @@ func handleAll(ctx context.Context) func(rw http.ResponseWriter, req *http.Reque
 			rw.Write([]byte(err.Error()))
 		} else {
 			log.Printf("Matched Mock[id=%v]", mock.ID)
-			rw.Header().Set("Content-Type", "application/json")
 			rw.WriteHeader(mock.ResponseStatus)
 			response, _ := json.Marshal(mock.ResponseBody)
 			rw.Write(response)
@@ -192,7 +192,7 @@ func fetchMocks(ctx context.Context, method string, path string) ([]model.Mock, 
 			}
 		}
 		if len(ids) == 0 {
-			return []model.Mock{}, fmt.Errorf("no mocks found")
+			return []model.Mock{}, fmt.Errorf("{}")
 		}
 		mocks, err = ctx.MockService.GetByIds(ids)
 		if err != nil {

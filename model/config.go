@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -8,11 +9,12 @@ type Database string
 
 const (
 	SqLite         Database = "SqLite"
-	SqLiteORM      Database = "SqLiteORM"
 	Postgres       Database = "Postgres"
-	defaultDir     string   = "./stubs"
+	InMemory       Database = "InMemory"
+	ExportDir      string   = "./.export"
+	ImportDir      string   = "./.import"
 	defaultPort    int      = 8080
-	defaultConnStr string   = "file:mockery.db?cache=shared&mode=rwc&_journal_mode=WAL"
+	defaultConnStr string   = ""
 )
 
 type Config struct {
@@ -35,16 +37,16 @@ type DBParams struct {
 
 func (c *Config) Validate() error {
 	if len(c.ExportDir) == 0 {
-		c.ExportDir = defaultDir
+		c.ExportDir = ExportDir
 	}
 	if len(c.ImportDir) == 0 {
-		c.ImportDir = defaultDir
+		c.ImportDir = ImportDir
 	}
 	if c.Port == 0 {
 		c.Port = defaultPort
 	}
 	switch c.DBType {
-	case SqLite, SqLiteORM:
+	case SqLite:
 		if len(c.DBConfig.SqLite.ConnectionString) == 0 {
 			return fmt.Errorf("connection string missing for [%s] connection", c.DBType)
 		}
@@ -52,9 +54,10 @@ func (c *Config) Validate() error {
 		if len(c.DBConfig.Postgres.ConnectionString) == 0 {
 			return fmt.Errorf("connection string missing for [%s] connection", c.DBType)
 		}
-	default:
-		c.DBType = SqLite
+	case InMemory:
 		c.DBConfig.SqLite.ConnectionString = defaultConnStr
+	default:
+		panic(errors.New("unsupported dbType"))
 	}
 	return nil
 }

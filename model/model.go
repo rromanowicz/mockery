@@ -45,7 +45,7 @@ func (rp RegexPath) Compile() *regexp.Regexp {
 	return compiled
 }
 
-func (m Mock) Validate() []string {
+func (m Mock) Validate() (bool, []string) {
 	val := reflect.ValueOf(m)
 	var validationErrors []string
 	for i := 0; i < val.NumField(); i++ {
@@ -70,7 +70,7 @@ func (m Mock) Validate() []string {
 		}
 	}
 	validateMissingData(m, &validationErrors)
-	return validationErrors
+	return len(validationErrors) == 0, validationErrors
 }
 
 func validateMissingData(mock Mock, validationErrors *[]string) {
@@ -111,7 +111,7 @@ func validateHeaderMatchers(mock Mock, validationErrors *[]string) {
 }
 
 func validatePath(mock Mock, validationErrors *[]string) {
-	if len(mock.Path) == 0 && len(mock.RegexPath) == 0 {
+	if (len(mock.Path) == 0 && len(mock.RegexPath) == 0) || (len(mock.Path) != 0 && len(mock.RegexPath) != 0) {
 		*validationErrors = append(*validationErrors, "Invalid path. Either 'Path' or 'RegexPath' must be provided.")
 	}
 	if len(mock.RegexPath) != 0 {

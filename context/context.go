@@ -2,7 +2,6 @@
 package context
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/rromanowicz/mockery/db"
@@ -27,26 +26,14 @@ func InitContext(config model.Config) (Context, error) {
 	var repo db.MockRepoInt
 	var dbParams model.DBParams
 	var dbDriverFn func(str string) gorm.Dialector
-	dbType := model.Database(config.DBType)
-	switch dbType {
-	case model.SqLite:
-		repo = SqLite
-		dbParams = config.DBConfig.SqLite
-	case model.Postgres:
-		repo = Postgres
-		dbParams = config.DBConfig.Postgres
-	default:
-		if len(dbType) == 0 {
-			return Context{}, fmt.Errorf("db type not set")
-		}
-		return Context{}, fmt.Errorf("unsupported DB Type")
-	}
 
 	switch config.DBType {
-	case model.SqLite:
+	case model.SqLite, model.InMemory:
+		repo = SqLite
 		dbDriverFn = sqlite.Open
 		dbParams = config.DBConfig.SqLite
 	case model.Postgres:
+		repo = Postgres
 		dbDriverFn = postgres.Open
 		dbParams = config.DBConfig.Postgres
 	}

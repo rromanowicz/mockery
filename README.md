@@ -15,7 +15,8 @@ Features:
 
 Persistence:
 
-- [x] SqLite
+- [x] SqLite (.db file)
+- [x] SqLite (in-memory)
 - [x] PostgreSQL
 
 ## [ToC]
@@ -27,6 +28,7 @@ Persistence:
 - [Config](#config)
   - [Endpoints](#endpoints)
 - [Examples](#examples)
+  - [Not matched](#not-matched)
   - [Path Matching](#simple-path)
   - [RequestBody Matching](#requestbody-matching)
   - [RequestQuery Matching](#requestquery-matching)
@@ -39,20 +41,15 @@ Persistence:
 
 Set up connection details in `mockery.yml` file
 
-```json
-{
-  "dbType": "SqLite",
-  "port": 8080,
-  "dbConfig": {
-    "sqlite": {
-      "connStr": "file:app.db?cache=shared&mode=rwc&_journal_mode=WAL"
-    },
-    "postgres": {
-      "connStr": "postgresql://postgres:password@localhost/mockery?sslmode=disable&application_name=mockery"
-    }
-  },
-  "autoImport": false
-}
+```yaml
+dbType: SqLite
+port: 8080
+dbConfig:
+  sqlite:
+    connStr: "file:mockery.db?cache=shared&mode=rwc&_journal_mode=WAL"
+  postgres:
+    connStr: "postgresql://postgres:password@localhost:5432/mockery?sslmode=disable&application_name=mockery"
+autoImport: false
 ```
 
 ### Overrides
@@ -77,12 +74,15 @@ Skip `mockery.yml` file / override flags to use default values
 - Other parameters will use default values
 
 ### Docker
+
 Build image
+
 ```sh
 docker build -t mockery .
 ```
 
 Run container
+
 ```sh
 docker run --name "mockery" -p 8080:8080 mockery
 ```
@@ -212,18 +212,23 @@ classDiagram
   - ResponseStatus: 200
 
 - GET /config/import
+
   - ResponseStatus: 200
-  - ResponseBody : []string
-    - List of imported files
-> Import directory `.import/`
+  - ResponseBody : []string - List of imported files
+    > Import directory `.import/`
 
 - GET /config/export
   - ResponseStatus: 200
-  - ResponseBody : []string
-    - List of exported files
-> Export directory `.export/`
+  - ResponseBody : []string - List of exported files
+    > Export directory `.export/`
 
 ## Examples
+
+### Not matched
+
+- GET /foo/baz
+  - ResponseStatus: 418
+  - RequestBody: {}
 
 ### Simple path
 

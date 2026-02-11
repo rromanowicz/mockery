@@ -2,21 +2,9 @@
 package db
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/fs"
-	"log"
-	"os"
-	"path"
-	"strings"
-
 	"github.com/rromanowicz/mockery/model"
+	"github.com/rromanowicz/mockery/util"
 	"gorm.io/gorm"
-)
-
-const (
-	exportDir = "./.export"
-	importDir = "./.import"
 )
 
 type MockRepoInt interface {
@@ -34,89 +22,9 @@ type MockRepoInt interface {
 }
 
 func ExportMocks(mocks []model.Mock) ([]string, error) {
-	os.MkdirAll(exportDir, os.ModePerm)
-	var files []string
-	for i := range mocks {
-		mockData, err := json.Marshal(mocks[i])
-		if err != nil {
-			log.Printf("Failed to marshal mock [id=%v]. Error: %v", mocks[i].ID, err.Error())
-			continue
-		}
-		var urlPath string
-		if len(mocks[i].Path) != 0 {
-			urlPath = strings.ReplaceAll(mocks[i].Path, "/", "_")
-		} else {
-			urlPath = strings.ReplaceAll(strings.ReplaceAll(mocks[i].RegexPath, "/", "_"), "\\", "")
-		}
-		fileName := fmt.Sprintf("%s/%v_%s%s.json", exportDir, mocks[i].ID, mocks[i].Method, urlPath)
-		err = writeFile(fileName, mockData)
-		if err != nil {
-			log.Printf("Failed to write mock [%s]. Error: %v", fileName, err.Error())
-			continue
-		}
-		files = append(files, fileName)
-	}
-	return files, nil
+	return util.Export(model.ExportDir, mocks)
 }
 
 func ImportMocks() ([]model.Mock, []string, error) {
-	files, err := listFiles()
-	if err != nil {
-		return []model.Mock{}, []string{}, err
-	}
-	var mocks []model.Mock
-	for i := range files {
-		contents, err := readFile(files[i])
-		if err != nil {
-			log.Printf("Failed to read [%v]. Error: %v", files[i], err.Error())
-			continue
-		}
-		var mock model.Mock
-		err = json.Unmarshal(contents, &mock)
-		if err != nil {
-			log.Printf("Failed to parse [%v], Error: %v", files[i], err.Error())
-			continue
-		}
-		mocks = append(mocks, mock)
-	}
-
-	return mocks, files, nil
-}
-
-func listFiles() ([]string, error) {
-	root := os.DirFS(importDir)
-	mdFiles, err := fs.Glob(root, "*.json")
-	if err != nil {
-		log.Println(err.Error())
-		return []string{}, err
-	}
-
-	var files []string
-	for _, v := range mdFiles {
-		files = append(files, path.Join(importDir, v))
-	}
-	return files, nil
-}
-
-func readFile(path string) ([]byte, error) {
-	contents, err := os.ReadFile(path)
-	if err != nil {
-		return []byte{}, err
-	}
-	return contents, nil
-}
-
-func writeFile(path string, contents []byte) error {
-	file, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	_, err = file.Write(contents)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return util.Import(model.ImportDir)
 }
