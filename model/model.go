@@ -11,6 +11,8 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+
+	"github.com/theory/jsonpath"
 )
 
 type Mock struct {
@@ -85,6 +87,11 @@ func validateBodyMatchers(mock Mock, validationErrors *[]string) {
 		matcher := mock.RequestBodyMatchers[i]
 		if len(matcher.Key) == 0 && len(fmt.Sprint(matcher.Value)) == 0 {
 			*validationErrors = append(*validationErrors, "Invalid BodyMatcher. Both values must be provided.")
+			break
+		}
+		_, err := jsonpath.Parse(matcher.Key)
+		if err != nil {
+			*validationErrors = append(*validationErrors, "Invalid BodyMatcher. Cannot parse key value as JsonPath.")
 			break
 		}
 	}

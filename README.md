@@ -52,6 +52,15 @@ dbConfig:
 autoImport: false
 ```
 
+Valid `dbType`:
+- InMemory
+- SqLite
+- Postgres
+
+Import directory: `.import/`
+
+Export directory: `.export/`
+
 ### Overrides
 
 Override values from `mockery.yml` file by providing additional arguments
@@ -64,9 +73,8 @@ Override values from `mockery.yml` file by providing additional arguments
 
 Skip `mockery.yml` file / override flags to use default values
 
+- Db: InMemory
 - Port: 8080
-- Db: SqLite
-- Connection string : file:app.db?cache=shared&mode=rwc&\_journal_mode=WAL
 
 ### Config validations
 
@@ -112,16 +120,16 @@ classDiagram
       +Validate()
   }
   class QueryMatcher {
-      +string param
+      +string key
       +any value
   }
   class BodyMatcher {
-      +string jsonPath
+      +string key
       +any value
   }
   class HeaderMatcher {
-      +string name
-      +string value
+      +string key
+      +any value
   }
 ```
 
@@ -132,9 +140,13 @@ classDiagram
   - Valid http method
 - Mock.path xor Mock.regexPath
   - Not empty
+- Mock.regexPath
+  - valid RegExp
 - Mock.responseStatus
   - Not empty
   - Valid http status
+- Mock.BodyMatcher
+  - key: valid JsonPath
 - HeaderMatcher | QueryMatcher | BodyMatcher
   - Both fields required if present
 
@@ -269,7 +281,7 @@ classDiagram
     {
       "method": "POST",
       "path": "/person",
-      "requestBodyMatchers": [{ "jsonPath": "$.firstName", "value": "John" }],
+      "requestBodyMatchers": [{ "key": "$.firstName", "value": "John" }],
       "responseStatus": 418,
       "responseBody": {
         "firstName": "John",
@@ -328,7 +340,7 @@ classDiagram
     {
       "method": "GET",
       "path": "/person",
-      "requestQueryMatchers": [{ "param": "id", "value": 1 }],
+      "requestQueryMatchers": [{ "key": "id", "value": 1 }],
       "responseStatus": 418,
       "responseBody": {
         "firstName": "John",
@@ -378,7 +390,7 @@ classDiagram
     {
       "method": "GET",
       "path": "/fooHeader",
-      "requestHeaderMatchers": [{ "name": "foo", "value": "false" }],
+      "requestHeaderMatchers": [{ "key": "foo", "value": "false" }],
       "responseStatus": 418,
       "responseBody": {
         "foo": false,
