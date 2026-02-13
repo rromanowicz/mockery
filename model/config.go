@@ -1,20 +1,21 @@
 package model
 
 import (
-	"errors"
 	"fmt"
 )
 
 type Database string
 
 const (
-	SqLite         Database = "SqLite"
-	Postgres       Database = "Postgres"
-	InMemory       Database = "InMemory"
-	ExportDir      string   = "./.export"
-	ImportDir      string   = "./.import"
-	defaultPort    int      = 8080
-	defaultConnStr string   = ""
+	SqLite                  Database = "SqLite"
+	Postgres                Database = "Postgres"
+	InMemory                Database = "InMemory"
+	ExportDir               string   = "./.export"
+	ImportDir               string   = "./.import"
+	defaultPort             int      = 8080
+	defaultConnStr          string   = ""
+	MissingConnectionString          = "Missing connection string"
+	UnsupportedDBType                = "unsupported dbType"
 )
 
 type Config struct {
@@ -48,16 +49,16 @@ func (c *Config) Validate() error {
 	switch c.DBType {
 	case SqLite:
 		if len(c.DBConfig.SqLite.ConnectionString) == 0 {
-			return fmt.Errorf("connection string missing for [%s] connection", c.DBType)
+			return fmt.Errorf("[%s] - %s", c.DBType, MissingConnectionString)
 		}
 	case Postgres:
 		if len(c.DBConfig.Postgres.ConnectionString) == 0 {
-			return fmt.Errorf("connection string missing for [%s] connection", c.DBType)
+			return fmt.Errorf("[%s] - %s", c.DBType, MissingConnectionString)
 		}
 	case InMemory:
 		c.DBConfig.SqLite.ConnectionString = defaultConnStr
 	default:
-		panic(errors.New("unsupported dbType"))
+		return fmt.Errorf("[%s] - %s", c.DBType, UnsupportedDBType)
 	}
 	return nil
 }

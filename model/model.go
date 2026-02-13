@@ -15,6 +15,17 @@ import (
 	"github.com/theory/jsonpath"
 )
 
+const (
+	InvalidBodyMatcher         = "Invalid BodyMatcher. Both values must be provided."
+	InvalidBodyMatcherJSONPath = "Invalid BodyMatcher. Cannot parse key value as JsonPath."
+	InvalidQueryMatcher        = "Invalid QueryMatcher. Both values must be provided."
+	InvalidHeaderMatcher       = "Invalid HeaderMatcher. Both values must be provided."
+	InvalidPath                = "Invalid path. Either 'Path' or 'RegexPath' must be provided."
+	InvalidRegex               = "Invalid RegexPath."
+	InvalidValue               = "Invalid value"
+	CanNotBeEmpty              = "can not be empty"
+)
+
 type Mock struct {
 	ID                    int64    `json:"id"`
 	Method                string   `json:"method" validate:"notEmpty,httpMethod"`
@@ -57,16 +68,16 @@ func (m Mock) Validate() (bool, []string) {
 			switch tag {
 			case "notEmpty":
 				if fieldValue.Len() == 0 {
-					validationErrors = append(validationErrors, fmt.Sprintf("'%v' can not be empty", val.Type().Field(i).Name))
+					validationErrors = append(validationErrors, fmt.Sprintf("'%v' %s", val.Type().Field(i).Name, CanNotBeEmpty))
 				}
 			case "httpMethod":
 				methods := []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete, http.MethodConnect, http.MethodOptions, http.MethodTrace}
 				if !slices.Contains(methods, fieldValue.String()) {
-					validationErrors = append(validationErrors, fmt.Sprintf("%v Invalid value [%v]", val.Type().Field(i).Name, fieldValue.String()))
+					validationErrors = append(validationErrors, fmt.Sprintf("%v - %s: [%v]", val.Type().Field(i).Name, InvalidValue, fieldValue.String()))
 				}
 			case "httpStatus":
 				if len(http.StatusText(int(fieldValue.Int()))) == 0 {
-					validationErrors = append(validationErrors, fmt.Sprintf("%v Invalid value: [%v]", val.Type().Field(i).Name, fieldValue.Int()))
+					validationErrors = append(validationErrors, fmt.Sprintf("%v - %s: [%v]", val.Type().Field(i).Name, InvalidValue, fieldValue.Int()))
 				}
 			}
 		}
@@ -85,13 +96,13 @@ func validateMissingData(mock Mock, validationErrors *[]string) {
 func validateBodyMatchers(mock Mock, validationErrors *[]string) {
 	for i := range mock.RequestBodyMatchers {
 		matcher := mock.RequestBodyMatchers[i]
-		if len(matcher.Key) == 0 && len(fmt.Sprint(matcher.Value)) == 0 {
-			*validationErrors = append(*validationErrors, "Invalid BodyMatcher. Both values must be provided.")
+		if len(matcher.Key) == 0 || len(fmt.Sprint(matcher.Value)) == 0 {
+			*validationErrors = append(*validationErrors, InvalidBodyMatcher)
 			break
 		}
 		_, err := jsonpath.Parse(matcher.Key)
 		if err != nil {
-			*validationErrors = append(*validationErrors, "Invalid BodyMatcher. Cannot parse key value as JsonPath.")
+			*validationErrors = append(*validationErrors, InvalidBodyMatcherJSONPath)
 			break
 		}
 	}
@@ -100,8 +111,8 @@ func validateBodyMatchers(mock Mock, validationErrors *[]string) {
 func validateQueryMatchers(mock Mock, validationErrors *[]string) {
 	for i := range mock.RequestQueryMatchers {
 		matcher := mock.RequestQueryMatchers[i]
-		if len(matcher.Key) == 0 && len(fmt.Sprint(matcher.Value)) == 0 {
-			*validationErrors = append(*validationErrors, "Invalid QueryMatcher. Both values must be provided.")
+		if len(matcher.Key) == 0 || len(fmt.Sprint(matcher.Value)) == 0 {
+			*validationErrors = append(*validationErrors, InvalidQueryMatcher)
 			break
 		}
 	}
@@ -110,8 +121,8 @@ func validateQueryMatchers(mock Mock, validationErrors *[]string) {
 func validateHeaderMatchers(mock Mock, validationErrors *[]string) {
 	for i := range mock.RequestHeaderMatchers {
 		matcher := mock.RequestHeaderMatchers[i]
-		if len(matcher.Key) == 0 && len(fmt.Sprint(matcher.Value)) == 0 {
-			*validationErrors = append(*validationErrors, "Invalid HeaderMatcher. Both values must be provided.")
+		if len(matcher.Key) == 0 || len(fmt.Sprint(matcher.Value)) == 0 {
+			*validationErrors = append(*validationErrors, InvalidHeaderMatcher)
 			break
 		}
 	}
@@ -119,12 +130,12 @@ func validateHeaderMatchers(mock Mock, validationErrors *[]string) {
 
 func validatePath(mock Mock, validationErrors *[]string) {
 	if (len(mock.Path) == 0 && len(mock.RegexPath) == 0) || (len(mock.Path) != 0 && len(mock.RegexPath) != 0) {
-		*validationErrors = append(*validationErrors, "Invalid path. Either 'Path' or 'RegexPath' must be provided.")
+		*validationErrors = append(*validationErrors, InvalidPath)
 	}
 	if len(mock.RegexPath) != 0 {
 		_, err := regexp.Compile(mock.RegexPath)
 		if err != nil {
-			*validationErrors = append(*validationErrors, fmt.Sprintf("Invalid RegexPath. %s is not a valid expression.", mock.RegexPath))
+			*validationErrors = append(*validationErrors, fmt.Sprintf("%s %s is not a valid expression.", InvalidRegex, mock.RegexPath))
 		}
 	}
 }
