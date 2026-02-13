@@ -17,8 +17,6 @@ type MockRepoImpl struct {
 }
 
 func (mr MockRepoImpl) InitDB(driverFn func(str string) gorm.Dialector, dbParams model.DBParams) MockRepoInt {
-	log.Println("Initializing repository.")
-
 	db, err := gorm.Open(driverFn(dbParams.ConnectionString), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")

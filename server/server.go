@@ -18,18 +18,20 @@ const configFilePath string = "mockery.yml"
 var ctx context.Context
 
 func StartMockServer(portOverride *int, dbTypeOverride *string) error {
-	config, err := ReadConfig()
-	if err != nil {
-		panic(err)
+	config := ReadConfig(portOverride, dbTypeOverride)
+	port, handler := SetupServer(&config)
+
+	server := http.Server{
+		Addr:    fmt.Sprintf(":%v", port),
+		Handler: handler,
 	}
 
-	if len(*dbTypeOverride) != 0 {
-		config.DBType = model.Database(*dbTypeOverride)
-	}
-	if *portOverride != 0 {
-		config.Port = *portOverride
-	}
+	log.Println("Service Started")
+	return server.ListenAndServe()
+}
 
+func SetupServer(config *model.Config) (int, *routing.RegexpHandler) {
+	var err error
 	ctx, err = context.InitContext(config)
 	if err != nil {
 		panic(err)
@@ -40,17 +42,10 @@ func StartMockServer(portOverride *int, dbTypeOverride *string) error {
 	handler := &routing.RegexpHandler{}
 	routing.RegisterRoutes(ctx, handler)
 
-	print()
-	server := http.Server{
-		Addr:    fmt.Sprintf(":%v", config.Port),
-		Handler: handler,
-	}
-
-	log.Println("Service Started")
-	return server.ListenAndServe()
+	return config.Port, handler
 }
 
-func ReadConfig() (model.Config, error) {
+func ReadConfig(portOverride *int, dbTypeOverride *string) model.Config {
 	var config model.Config
 	contents, err := os.ReadFile(configFilePath)
 	if err != nil {
@@ -62,5 +57,14 @@ func ReadConfig() (model.Config, error) {
 		}
 	}
 	err = config.Validate()
-	return config, err
+	if err != nil {
+		panic(err)
+	}
+	if len(*dbTypeOverride) != 0 {
+		config.DBType = model.Database(*dbTypeOverride)
+	}
+	if *portOverride != 0 {
+		config.Port = *portOverride
+	}
+	return config
 }
