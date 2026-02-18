@@ -13,6 +13,8 @@ Features:
 - [x] JSON File export
 - [x] JSON File import
 
+- [x] Proxy
+
 Persistence:
 
 - [x] SqLite (.db file)
@@ -34,6 +36,7 @@ Persistence:
   - [RequestQuery Matching](#requestquery-matching)
   - [RequestHeader Matching](#requestheader-matching)
   - [Regexp Matching](#regexp-matching)
+  - [Proxy](#proxy)
 
 ## Running
 
@@ -163,8 +166,10 @@ classDiagram
     {
       "method": "GET",
       "path": "/foo/bar",
-      "responseStatus": 418,
-      "responseBody": { "foo": "bar", "baz": 1 }
+      "response": {
+        "status": 418,
+        "body": { "foo": "bar", "baz": 1 }
+      }
     }
     ```
 
@@ -177,8 +182,10 @@ classDiagram
     {
       "method": "GET",
       "path": "/foo/bar",
-      "responseStatus": 418,
-      "responseBody": { "foo": "bar", "baz": 1 }
+      "response": {
+        "status": 418,
+        "body": { "foo": "bar", "baz": 1 }
+      }
     }
     ```
 
@@ -192,29 +199,37 @@ classDiagram
         "id": 1,
         "method": "GET",
         "path": "/asd/asd",
-        "responseStatus": 200,
-        "responseBody": { "asd": "zxc", "qwe": 1 }
+        "response": {
+          "status": 200,
+          "body": { "asd": "zxc", "qwe": 1 }
+        }
       },
       {
         "id": 2,
         "method": "GET",
         "path": "/asd/asd",
-        "responseStatus": 200,
-        "responseBody": { "asd": "zxc", "qwe": 1 }
+        "response": {
+          "status": 200,
+          "body": { "asd": "zxc", "qwe": 1 }
+        }
       },
       {
         "id": 3,
         "method": "GET",
         "path": "/asd/qwe",
-        "responseStatus": 418,
-        "responseBody": { "asd": "zxc", "qwe": 1 }
+        "response": {
+          "status": 418,
+          "body": { "asd": "zxc", "qwe": 1 }
+        }
       },
       {
         "id": 4,
         "method": "POST",
         "path": "/zxc",
-        "responseStatus": 201,
-        "responseBody": { "asd": "zxc", "qwe": 1 }
+        "response": {
+          "status": 201,
+          "body": { "asd": "zxc", "qwe": 1 }
+        }
       }
     ]
     ```
@@ -245,7 +260,6 @@ classDiagram
 ### Simple path
 
 - POST /config
-
   - ResponseStatus: 201
   - RequestBody:
 
@@ -253,8 +267,10 @@ classDiagram
     {
       "method": "GET",
       "path": "/foo/bar",
-      "responseStatus": 418,
-      "responseBody": { "foo": "bar", "baz": 1 }
+      "response": {
+        "status": 418,
+        "body": { "foo": "bar", "baz": 1 }
+      }
     }
     ```
 
@@ -273,7 +289,6 @@ classDiagram
 ### RequestBody Matching
 
 - POST /config
-
   - ResponseStatus: 201
   - RequestBody:
 
@@ -282,26 +297,27 @@ classDiagram
       "method": "POST",
       "path": "/person",
       "requestBodyMatchers": [{ "key": "$.firstName", "value": "John" }],
-      "responseStatus": 418,
-      "responseBody": {
-        "firstName": "John",
-        "lastName": "doe",
-        "age": 26,
-        "address": {
-          "streetAddress": "naist street",
-          "city": "Nara",
-          "postalCode": "630-0192"
-        },
-        "phoneNumbers": [
-          { "type": "iPhone", "number": "0123-4567-8888" },
-          { "type": "home", "number": "0123-4567-8910" }
-        ]
+      "response": {
+        "status": 418,
+        "body": {
+          "firstName": "John",
+          "lastName": "doe",
+          "age": 26,
+          "address": {
+            "streetAddress": "naist street",
+            "city": "Nara",
+            "postalCode": "630-0192"
+          },
+          "phoneNumbers": [
+            { "type": "iPhone", "number": "0123-4567-8888" },
+            { "type": "home", "number": "0123-4567-8910" }
+          ]
+        }
       }
     }
     ```
 
 - POST /person
-
   - RequestBody:
 
     ```json
@@ -332,7 +348,6 @@ classDiagram
 ### RequestQuery Matching
 
 - POST /config
-
   - ResponseStatus: 201
   - RequestBody:
 
@@ -341,20 +356,22 @@ classDiagram
       "method": "GET",
       "path": "/person",
       "requestQueryMatchers": [{ "key": "id", "value": 1 }],
-      "responseStatus": 418,
-      "responseBody": {
-        "firstName": "John",
-        "lastName": "doe",
-        "age": 26,
-        "address": {
-          "streetAddress": "naist street",
-          "city": "Nara",
-          "postalCode": "630-0192"
-        },
-        "phoneNumbers": [
-          { "type": "iPhone", "number": "0123-4567-8888" },
-          { "type": "home", "number": "0123-4567-8910" }
-        ]
+      "response": {
+        "status": 418,
+        "body": {
+          "firstName": "John",
+          "lastName": "doe",
+          "age": 26,
+          "address": {
+            "streetAddress": "naist street",
+            "city": "Nara",
+            "postalCode": "630-0192"
+          },
+          "phoneNumbers": [
+            { "type": "iPhone", "number": "0123-4567-8888" },
+            { "type": "home", "number": "0123-4567-8910" }
+          ]
+        }
       }
     }
     ```
@@ -382,7 +399,6 @@ classDiagram
 ### RequestHeader Matching
 
 - POST /config
-
   - ResponseStatus: 201
   - RequestBody:
 
@@ -391,10 +407,12 @@ classDiagram
       "method": "GET",
       "path": "/fooHeader",
       "requestHeaderMatchers": [{ "key": "foo", "value": "false" }],
-      "responseStatus": 418,
-      "responseBody": {
-        "foo": false,
-        "bar": [{ "baz": 3 }, { "baz": 4 }]
+      "response": {
+        "status": 418,
+        "body": {
+          "foo": false,
+          "bar": [{ "baz": 3 }, { "baz": 4 }]
+        }
       }
     }
     ```
@@ -414,7 +432,6 @@ classDiagram
 ### Regexp Matching
 
 - POST /config
-
   - ResponseStatus: 201
   - RequestBody:
 
@@ -422,13 +439,15 @@ classDiagram
     {
       "method": "GET",
       "regexPath": "\/foo\/bar\/\\d+\/baz",
-      "responseStatus": 200,
-      "responseBody": {
-        "foo": true,
-        "bar": {
-          "id": 123,
-          "baz": {
-            "zxc": 18
+      "response": {
+        "status": 200,
+        "body": {
+          "foo": true,
+          "bar": {
+            "id": 123,
+            "baz": {
+              "zxc": 18
+            }
           }
         }
       }
@@ -449,3 +468,26 @@ classDiagram
       }
     }
     ```
+
+### Proxy
+
+- POST /config
+  - ResponseStatus: 201
+  - RequestBody:
+    ```json
+    {
+      "method": "GET",
+      "regexPath": "\/products\/\\d+",
+      "response": {
+        "proxy": {
+          "enabled": true,
+          "hostUrl": "https://fakestoreapi.com"
+        }
+      }
+    }
+    ```
+
+- GET https://fakestoreapi.com/products/1
+  - ResponseStatus: 200
+  - ResponseBody: `Actual response body`
+
