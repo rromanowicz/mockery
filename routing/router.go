@@ -21,18 +21,25 @@ import (
 )
 
 func RegisterRoutes(ctx context.Context, handler *RegexpHandler) {
+	regHealth, _ := regexp.Compile("/health")
 	regHelp, _ := regexp.Compile("/help")
 	regConfigList, _ := regexp.Compile("/config/list")
 	regConfigImport, _ := regexp.Compile("/config/import")
 	regConfigExport, _ := regexp.Compile("/config/export")
 	regConfig, _ := regexp.Compile("/config.*")
 	reg, _ := regexp.Compile("/.*")
+	handler.HandleFunc(regHealth, handleHealth)
 	handler.HandleFunc(regHelp, handleHelp)
 	handler.HandleFunc(regConfigList, handleConfigList(ctx))
 	handler.HandleFunc(regConfigImport, handleConfigImport(ctx))
 	handler.HandleFunc(regConfigExport, handleConfigExport(ctx))
 	handler.HandleFunc(regConfig, handleConfig(ctx))
 	handler.HandleFunc(reg, handleAll(ctx))
+}
+
+func handleHealth(rw http.ResponseWriter, req *http.Request) {
+	rw.WriteHeader(http.StatusOK)
+	rw.Write([]byte{})
 }
 
 func handleHelp(rw http.ResponseWriter, req *http.Request) {
@@ -89,7 +96,6 @@ func handleConfig(ctx context.Context) func(rw http.ResponseWriter, req *http.Re
 				rw.WriteHeader(http.StatusCreated)
 				jsonBody, _ := json.Marshal(mock)
 				rw.Write([]byte(jsonBody))
-				log.Printf("Created new mock for path [%s]", mock.Path)
 			}
 		case "DELETE":
 			var id int64
@@ -155,13 +161,14 @@ func handleAll(ctx context.Context) func(rw http.ResponseWriter, req *http.Reque
 		mocks, err := fetchMocks(ctx, req.Method, req.URL.Path)
 		rw.Header().Set("Content-Type", "application/json")
 		if err != nil {
-			rw.WriteHeader(http.StatusTeapot)
+			log.Println(err.Error())
+			rw.WriteHeader(http.StatusInternalServerError)
 			rw.Write([]byte(err.Error()))
 			return
 		}
 		mock, err := filterMocks(mocks, req)
 		if err != nil {
-			rw.WriteHeader(http.StatusNotFound)
+			rw.WriteHeader(http.StatusTeapot)
 			rw.Write([]byte(err.Error()))
 		} else {
 			log.Printf("Matched Mock[id=%v]", mock.ID)

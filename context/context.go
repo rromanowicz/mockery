@@ -23,7 +23,7 @@ type Context struct {
 	ProxyService service.ProxyInt
 }
 
-func InitContext(config model.Config) (Context, error) {
+func InitContext(config *model.Config) (Context, error) {
 	var repo db.MockRepoInt
 	var dbParams model.DBParams
 	var dbDriverFn func(str string) gorm.Dialector
