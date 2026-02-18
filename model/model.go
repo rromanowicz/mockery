@@ -47,12 +47,12 @@ type Matcher struct {
 
 type Response struct {
 	Proxy  Proxy `json:"proxy" gorm:"embedded"`
-	Status int   `json:"status" validate:"httpStatus"`
-	Body   JSONB `json:"body" gorm:"type:jsonb"`
+	Status int   `json:"status,omitempty" validate:"httpStatus"`
+	Body   JSONB `json:"body,omitempty" gorm:"type:jsonb"`
 }
 
 type Proxy struct {
-	Enabled bool   `json:"enabled"`
+	Enabled bool   `json:"enabled,omitempty"`
 	HostURL string `json:"hostUrl,omitempty"`
 }
 

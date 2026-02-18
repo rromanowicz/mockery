@@ -1,0 +1,19 @@
+name: GET PROXY /product/1
+method: POST
+url: http://localhost:8080/config
+body:
+  content: |-
+    {
+      "method": "GET",
+      "regexPath": "\/products\/\\d+",
+      "response": {
+        "proxy": {
+          "enabled": true,
+          "hostUrl": "https://fakestoreapi.com"
+        }
+      }
+    }
+  content_type: application/json
+headers:
+- name: content-type
+  value: application/json

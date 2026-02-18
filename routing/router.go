@@ -165,11 +165,24 @@ func handleAll(ctx context.Context) func(rw http.ResponseWriter, req *http.Reque
 			rw.Write([]byte(err.Error()))
 		} else {
 			log.Printf("Matched Mock[id=%v]", mock.ID)
+
+			mock, err = handleProxy(ctx, &mock, req)
+			if err != nil {
+				log.Println(err.Error())
+			}
+
 			rw.WriteHeader(mock.Response.Status)
 			response, _ := json.Marshal(mock.Response.Body)
 			rw.Write(response)
 		}
 	}
+}
+
+func handleProxy(ctx context.Context, mock *model.Mock, req *http.Request) (model.Mock, error) {
+	if !mock.Response.Proxy.Enabled {
+		return *mock, nil
+	}
+	return ctx.ProxyService.CallExternal(mock, req)
 }
 
 func fetchMocks(ctx context.Context, method string, path string) ([]model.Mock, error) {

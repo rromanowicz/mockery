@@ -18,8 +18,9 @@ var (
 )
 
 type Context struct {
-	Repository  db.MockRepoInt
-	MockService service.MockInt
+	Repository   db.MockRepoInt
+	MockService  service.MockInt
+	ProxyService service.ProxyInt
 }
 
 func InitContext(config model.Config) (Context, error) {
@@ -40,9 +41,9 @@ func InitContext(config model.Config) (Context, error) {
 
 	log.Printf("Starting server [Port: %v, DB: %s]", config.Port, config.DBType)
 
-	service := service.InitMockService(repo, dbDriverFn, dbParams)
+	mockService := service.InitMockService(repo, dbDriverFn, dbParams)
 	if config.AutoImport {
-		imported, err := service.Import()
+		imported, err := mockService.Import()
 		if err != nil {
 			log.Println(err)
 		} else {
@@ -51,8 +52,9 @@ func InitContext(config model.Config) (Context, error) {
 	}
 
 	return Context{
-		Repository:  repo,
-		MockService: service,
+		Repository:   repo,
+		MockService:  mockService,
+		ProxyService: service.ProxyService{},
 	}, nil
 }
 
