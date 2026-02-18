@@ -2,15 +2,40 @@ name: POST /person [John]
 method: POST
 url: http://localhost:8080/config
 body:
-  content: "{\n\t\"method\": \"POST\",\n\t\"path\": \"/person\",\n\t\"requestBodyMatchers\"\
-    : [\n\t\t{\n\t\t\t\"key\": \"$POSTING_DOLLAR.firstName\",\n\t\t\t\"value\": \"\
-    John\"\n\t\t}\n\t],\n\t\"responseStatus\": 418,\n\t\"responseBody\": {\n\t\t\"\
-    firstName\": \"John\",\n\t\t\"lastName\": \"doe\",\n\t\t\"age\": 26,\n\t\t\"address\"\
-    : {\n\t\t\t\"streetAddress\": \"naist street\",\n\t\t\t\"city\": \"Nara\",\n\t\
-    \t\t\"postalCode\": \"630-0192\"\n\t\t},\n\t\t\"phoneNumbers\": [\n\t\t\t{\n\t\
-    \t\t\t\"type\": \"iPhone\",\n\t\t\t\t\"number\": \"0123-4567-8888\"\n\t\t\t},\n\
-    \t\t\t{\n\t\t\t\t\"type\": \"home\",\n\t\t\t\t\"number\": \"0123-4567-8910\"\n\
-    \t\t\t}\n\t\t]\n\t}\n}"
+  content: |-
+    {
+      "method": "POST",
+      "path": "/person",
+      "requestBodyMatchers": [
+        {
+          "key": "$POSTING_DOLLAR.firstName",
+          "value": "John"
+        }
+      ],
+      "response": {
+        "status": 418,
+        "body": {
+          "firstName": "John",
+          "lastName": "doe",
+          "age": 26,
+          "address": {
+            "streetAddress": "naist street",
+            "city": "Nara",
+            "postalCode": "630-0192"
+          },
+          "phoneNumbers": [
+            {
+              "type": "iPhone",
+              "number": "0123-4567-8888"
+            },
+            {
+              "type": "home",
+              "number": "0123-4567-8910"
+            }
+          ]
+        }
+      }
+    }
   content_type: application/json
 headers:
 - name: content-type

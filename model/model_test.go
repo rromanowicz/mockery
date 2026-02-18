@@ -53,10 +53,12 @@ func containsError(errStr string, errors []string) bool {
 
 var (
 	validSimple = model.Mock{
-		Method:         "POST",
-		Path:           "/test",
-		ResponseStatus: 200,
-		ResponseBody:   make(model.JSONB),
+		Method: "POST",
+		Path:   "/test",
+		Response: model.Response{
+			Status: 200,
+			Body:   make(model.JSONB),
+		},
 	}
 	validFull = model.Mock{
 		Method:                "POST",
@@ -64,65 +66,85 @@ var (
 		RequestBodyMatchers:   []model.Matcher{{"$.test", "test"}, {"$.foo", "bar"}},
 		RequestQueryMatchers:  []model.Matcher{{"test", "test"}},
 		RequestHeaderMatchers: []model.Matcher{{"test", "test"}},
-		ResponseStatus:        200,
-		ResponseBody:          make(model.JSONB),
+		Response: model.Response{
+			Status: 200,
+			Body:   make(model.JSONB),
+		},
 	}
 	invalidPath = model.Mock{
-		Method:         "POST",
-		Path:           "/test",
-		RegexPath:      "\\/test\\/\\d+",
-		ResponseStatus: 200,
-		ResponseBody:   make(model.JSONB),
+		Method:    "POST",
+		Path:      "/test",
+		RegexPath: "\\/test\\/\\d+",
+		Response: model.Response{
+			Status: 200,
+			Body:   make(model.JSONB),
+		},
 	}
 	invalidRegex = model.Mock{
-		Method:         "POST",
-		RegexPath:      "\\/test\\/[asd",
-		ResponseStatus: 200,
-		ResponseBody:   make(model.JSONB),
+		Method:    "POST",
+		RegexPath: "\\/test\\/[asd",
+		Response: model.Response{
+			Status: 200,
+			Body:   make(model.JSONB),
+		},
 	}
 	bodyMatcherMissingField = model.Mock{
 		Method:              "POST",
 		Path:                "/test",
 		RequestBodyMatchers: []model.Matcher{{"test", ""}},
-		ResponseStatus:      200,
-		ResponseBody:        make(model.JSONB),
+		Response: model.Response{
+			Status: 200,
+			Body:   make(model.JSONB),
+		},
 	}
 	bodyMatcherInvalidJSONPath = model.Mock{
 		Method:              "POST",
 		Path:                "/test",
 		RequestBodyMatchers: []model.Matcher{{"test", "test"}},
-		ResponseStatus:      200,
-		ResponseBody:        make(model.JSONB),
+		Response: model.Response{
+			Status: 200,
+			Body:   make(model.JSONB),
+		},
 	}
 	queryMatcherMissingField = model.Mock{
 		Method:               "POST",
 		Path:                 "/test",
 		RequestQueryMatchers: []model.Matcher{{"test", ""}},
-		ResponseStatus:       200,
-		ResponseBody:         make(model.JSONB),
+		Response: model.Response{
+			Status: 200,
+			Body:   make(model.JSONB),
+		},
 	}
 	headerMatcherMissingField = model.Mock{
 		Method:                "POST",
 		Path:                  "/test",
 		RequestHeaderMatchers: []model.Matcher{{"test", ""}},
-		ResponseStatus:        200,
-		ResponseBody:          make(model.JSONB),
+		Response: model.Response{
+			Status: 200,
+			Body:   make(model.JSONB),
+		},
 	}
 	missingMethod = model.Mock{
-		Path:           "/test",
-		ResponseStatus: 200,
-		ResponseBody:   make(model.JSONB),
+		Path: "/test",
+		Response: model.Response{
+			Status: 200,
+			Body:   make(model.JSONB),
+		},
 	}
 	invalidMethod = model.Mock{
-		Method:         "TEST",
-		Path:           "/test",
-		ResponseStatus: 200,
-		ResponseBody:   make(model.JSONB),
+		Method: "TEST",
+		Path:   "/test",
+		Response: model.Response{
+			Status: 200,
+			Body:   make(model.JSONB),
+		},
 	}
 	invalidStatus = model.Mock{
-		Method:         "POST",
-		Path:           "/test",
-		ResponseStatus: 123,
-		ResponseBody:   make(model.JSONB),
+		Method: "POST",
+		Path:   "/test",
+		Response: model.Response{
+			Status: 123,
+			Body:   make(model.JSONB),
+		},
 	}
 )

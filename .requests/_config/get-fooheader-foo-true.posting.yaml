@@ -2,10 +2,24 @@ name: GET /fooHeader -h foo=true
 method: POST
 url: http://localhost:8080/config
 body:
-  content: "{\n\t\"method\": \"GET\",\n\t\"path\": \"/fooHeader\",\n\t\"requestHeaderMatchers\"\
-    : [\n\t\t{\n\t\t\t\"key\": \"foo\",\n\t\t\t\"value\": \"true\"\n\t\t}\n\t],\n\t\
-    \"responseStatus\": 200,\n\t\"responseBody\": {\n\t\t\"foo\": true,\n\t\t\"bar\"\
-    : [\n\t\t\t{\"baz\": 1},\n\t\t\t{\"baz\": 2}\n\t\t]\n\t}\n}"
+  content: |-
+    {
+      "method": "GET",
+      "path": "/fooHeader",
+      "requestHeaderMatchers": [
+        {
+          "key": "foo",
+          "value": "true"
+        }
+      ],
+      "response": {
+        "status": 200,
+        "body": {
+          "foo": true,
+          "bar": [{ "baz": 1 }, { "baz": 2 }]
+        }
+      }
+    }
   content_type: application/json
 headers:
 - name: content-type

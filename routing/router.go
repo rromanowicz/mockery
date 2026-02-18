@@ -58,8 +58,8 @@ func handleConfig(ctx context.Context) func(rw http.ResponseWriter, req *http.Re
 					rw.WriteHeader(http.StatusNotFound)
 					rw.Write([]byte(err.Error()))
 				} else {
-					rw.WriteHeader(mock.ResponseStatus)
-					resp, _ := mock.ResponseBody.Value()
+					rw.WriteHeader(mock.Response.Status)
+					resp, _ := mock.Response.Body.Value()
 					rw.Write(resp.([]byte))
 				}
 			}
@@ -165,8 +165,8 @@ func handleAll(ctx context.Context) func(rw http.ResponseWriter, req *http.Reque
 			rw.Write([]byte(err.Error()))
 		} else {
 			log.Printf("Matched Mock[id=%v]", mock.ID)
-			rw.WriteHeader(mock.ResponseStatus)
-			response, _ := json.Marshal(mock.ResponseBody)
+			rw.WriteHeader(mock.Response.Status)
+			response, _ := json.Marshal(mock.Response.Body)
 			rw.Write(response)
 		}
 	}

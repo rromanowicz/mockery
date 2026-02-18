@@ -23,6 +23,7 @@ const (
 	InvalidPath                = "Invalid path. Either 'Path' or 'RegexPath' must be provided."
 	InvalidRegex               = "Invalid RegexPath."
 	InvalidValue               = "Invalid value"
+	InvalidProxyMissingHost    = "Invalid proxy. Missing HostURL"
 	CanNotBeEmpty              = "can not be empty"
 )
 
@@ -34,8 +35,7 @@ type Mock struct {
 	RequestHeaderMatchers Matchers `json:"requestHeaderMatchers,omitempty" gorm:"type:jsonb"`
 	RequestQueryMatchers  Matchers `json:"requestQueryMatchers,omitempty" gorm:"type:jsonb"`
 	RequestBodyMatchers   Matchers `json:"requestBodyMatchers,omitempty" gorm:"type:jsonb"`
-	ResponseStatus        int      `json:"responseStatus" validate:"httpStatus"`
-	ResponseBody          JSONB    `json:"responseBody" gorm:"type:jsonb"`
+	Response              Response `json:"response" gorm:"embedded"`
 }
 
 type Matchers []Matcher
@@ -43,6 +43,17 @@ type Matchers []Matcher
 type Matcher struct {
 	Key   string `json:"key"`
 	Value any    `json:"value"`
+}
+
+type Response struct {
+	Proxy  Proxy `json:"proxy" gorm:"embedded"`
+	Status int   `json:"status" validate:"httpStatus"`
+	Body   JSONB `json:"body" gorm:"type:jsonb"`
+}
+
+type Proxy struct {
+	Enabled bool   `json:"enabled"`
+	HostURL string `json:"hostUrl,omitempty"`
 }
 
 type RegexMatcher struct {
@@ -91,6 +102,19 @@ func validateMissingData(mock Mock, validationErrors *[]string) {
 	validateHeaderMatchers(mock, validationErrors)
 	validateQueryMatchers(mock, validationErrors)
 	validateBodyMatchers(mock, validationErrors)
+	validateResponse(mock, validationErrors)
+}
+
+func validateResponse(mock Mock, validationErrors *[]string) {
+	if mock.Response.Proxy.Enabled {
+		if len(mock.Response.Proxy.HostURL) == 0 {
+			*validationErrors = append(*validationErrors, InvalidProxyMissingHost)
+		}
+	} else {
+		if len(http.StatusText(mock.Response.Status)) == 0 {
+			*validationErrors = append(*validationErrors, fmt.Sprintf("Response.Status - %s: [%v]", InvalidValue, mock.Response.Status))
+		}
+	}
 }
 
 func validateBodyMatchers(mock Mock, validationErrors *[]string) {
