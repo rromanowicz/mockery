@@ -173,9 +173,12 @@ func handleAll(ctx context.Context) func(rw http.ResponseWriter, req *http.Reque
 		} else {
 			log.Printf("Matched Mock[id=%v]", mock.ID)
 
-			mock, err = handleProxy(ctx, &mock, req)
-			if err != nil {
-				log.Println(err.Error())
+			mock, proxyErr := handleProxy(ctx, &mock, req)
+			if proxyErr != nil {
+				log.Println(proxyErr.Error())
+				rw.WriteHeader(http.StatusInternalServerError)
+				fmt.Fprintf(rw, `{"err": "Proxy call failed", "details": "%s"}`, proxyErr.Error())
+				return
 			}
 
 			rw.WriteHeader(mock.Response.Status)
